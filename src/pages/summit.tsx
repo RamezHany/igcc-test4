@@ -331,6 +331,114 @@ const SummitPage: NextPageWithLayout = () => {
                   </Grid>
                 ))}
               </Grid>
+
+              {/* Speakers and Participants Section */}
+              <Typography variant="h5" gutterBottom sx={{ mt: 6, mb: 3, textAlign: isRtl ? 'right' : 'left' }}>
+                {isRtl ? 'المتحدثون والمشاركون' : 'Speakers and Participants'}
+              </Typography>
+
+              <Grid container spacing={3}>
+                {/* Opening Session Speakers */}
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 3, mb: 3 }}>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', textAlign: isRtl ? 'right' : 'left' }}>
+                      {isRtl ? 'المتحدثون في الجلسة الافتتاحية' : 'Opening Session Speakers'}
+                    </Typography>
+                    <ul style={{ 
+                      listStyleType: 'none', 
+                      padding: 0,
+                      textAlign: isRtl ? 'right' : 'left', 
+                      direction: isRtl ? 'rtl' : 'ltr' 
+                    }}>
+                      <li style={{ marginBottom: '8px' }}>• {isRtl ? 'الدكتورة نورهان حسن – رئيس مجلس إدارة المركز الدولي لاستشارات الحوكمة' : 'Dr. Nourhan Hassan – Chairman of the International Center for Governance Consulting'}</li>
+                      <li style={{ marginBottom: '8px' }}>• {isRtl ? 'المهندس روحى العربى - رجل الاعمال و رئيس مجلس امناء مؤسسة الجمهورية الجديدة للتنمية' : 'Eng. Rowhi El-Araby - Chairman of the Board of Trustees of the New Republic Foundation for Development'}</li>
+                      <li style={{ marginBottom: '8px' }}>• {isRtl ? 'اللواء ممدوح النمر – الأمين العام لمحافظة الإسكندرية' : 'Major General Mamdouh El-Nimr – Secretary General of Alexandria Governorate'}</li>
+                    </ul>
+                  </Paper>
+                </Grid>
+
+                {/* First Session */}
+                <Grid item xs={12} md={6}>
+                  <Paper sx={{ p: 3, height: '100%' }}>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', textAlign: isRtl ? 'right' : 'left' }}>
+                      {isRtl ? 'الجلسة الأولى' : 'First Session'}
+                    </Typography>
+                    <Typography variant="subtitle2" gutterBottom sx={{ color: 'text.secondary', textAlign: isRtl ? 'right' : 'left' }}>
+                      {isRtl ? 'إدارة: د. إبراهيم الشبيني' : 'Moderated by: Dr. Ibrahim El-Shebini'}
+                    </Typography>
+                    <ul style={{ 
+                      listStyleType: 'none', 
+                      padding: 0,
+                      textAlign: isRtl ? 'right' : 'left', 
+                      direction: isRtl ? 'rtl' : 'ltr' 
+                    }}>
+                      <li style={{ marginBottom: '8px' }}>• {isRtl ? 'د. السيد الصيفي – أستاذ التمويل والاستثمار' : 'Dr. El-Sayed El-Seify – Professor of Finance and Investment'}</li>
+                      <li style={{ marginBottom: '8px' }}>• {isRtl ? 'د. ماجد عبد العظيم – أستاذ الاقتصاد' : 'Dr. Maged Abdel-Azim – Professor of Economics'}</li>
+                      <li style={{ marginBottom: '8px' }}>• {isRtl ? 'د. نورهان حسن – مستشار دولي معتمد' : 'Dr. Nourhan Hassan – Certified International Consultant'}</li>
+                      <li style={{ marginBottom: '8px' }}>• {isRtl ? 'د. رامي فتح الله – شريك ومدير مكتب فتح الله' : 'Dr. Rami Fathalla – Partner and Manager at Fathalla Office'}</li>
+                    </ul>
+                  </Paper>
+                </Grid>
+
+                {/* Second Session */}
+                <Grid item xs={12} md={6}>
+                  <Paper sx={{ p: 3, height: '100%' }}>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', textAlign: isRtl ? 'right' : 'left' }}>
+                      {isRtl ? 'الجلسة الثانية' : 'Second Session'}
+                    </Typography>
+                    <Typography variant="subtitle2" gutterBottom sx={{ color: 'text.secondary', textAlign: isRtl ? 'right' : 'left' }}>
+                      {isRtl ? 'إدارة: د. رانيا المالكي' : 'Moderated by: Dr. Rania El-Malki'}
+                    </Typography>
+                    <ul style={{ 
+                      listStyleType: 'none', 
+                      padding: 0,
+                      textAlign: isRtl ? 'right' : 'left', 
+                      direction: isRtl ? 'rtl' : 'ltr' 
+                    }}>
+                      <li style={{ marginBottom: '8px' }}>• {isRtl ? 'المستشار أحمد الزيات – مستشار في الحوكمة' : 'Counselor Ahmed El-Zayat – Governance Consultant'}</li>
+                      <li style={{ marginBottom: '8px' }}>• {isRtl ? 'د. ناصر حسن – خبير مصرفي' : 'Dr. Nasser Hassan – Banking Expert'}</li>
+                      <li style={{ marginBottom: '8px' }}>• {isRtl ? 'م. محمد صلاح – مدير عام الطاقة والجودة' : 'Eng. Mohamed Salah – General Manager of Energy and Quality'}</li>
+                    </ul>
+                  </Paper>
+                </Grid>
+
+                {/* Distinguished Attendees */}
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 3 }}>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', textAlign: isRtl ? 'right' : 'left' }}>
+                      {isRtl ? 'الحضور المميز' : 'Distinguished Attendees'}
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={6}>
+                        <ul style={{ 
+                          listStyleType: 'none', 
+                          padding: 0,
+                          textAlign: isRtl ? 'right' : 'left', 
+                          direction: isRtl ? 'rtl' : 'ltr' 
+                        }}>
+                          <li style={{ marginBottom: '8px' }}>• {isRtl ? 'أ. رزق الطرابيشي – نقيب الصحفيين' : 'Mr. Rizk El-Tarabishi – Head of Journalists Syndicate'}</li>
+                          <li style={{ marginBottom: '8px' }}>• {isRtl ? 'د. محمد أنسي – نقيب الصيادلة' : 'Dr. Mohamed Onsi – Head of Pharmacists Syndicate'}</li>
+                          <li style={{ marginBottom: '8px' }}>• {isRtl ? 'أ. محمود طلحة – شركة تراي مي فارما' : 'Mr. Mahmoud Talha – Try Me Pharma Company'}</li>
+                          <li style={{ marginBottom: '8px' }}>• {isRtl ? 'أ. أسامة أبو المجد – رئيس هيئة الاستثمار بالإسكندرية' : 'Mr. Osama Abul-Magd – Head of Alexandria Investment Authority'}</li>
+                        </ul>
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <ul style={{ 
+                          listStyleType: 'none', 
+                          padding: 0,
+                          textAlign: isRtl ? 'right' : 'left', 
+                          direction: isRtl ? 'rtl' : 'ltr' 
+                        }}>
+                          <li style={{ marginBottom: '8px' }}>• {isRtl ? 'أ. مجدي عبد العزيز – الأمين العام للجنة الممول والضريبة' : 'Mr. Magdy Abdel-Aziz – Secretary General of Tax Committee'}</li>
+                          <li style={{ marginBottom: '8px' }}>• {isRtl ? 'د. علاء الغرباوي – وكيل كلية الأعمال' : 'Dr. Alaa El-Gharbawy – Vice Dean of Business College'}</li>
+                          <li style={{ marginBottom: '8px' }}>• {isRtl ? 'أ. مهاب – وكيل كلية التربية الرياضية' : 'Mr. Mohab – Vice Dean of Physical Education College'}</li>
+                          <li style={{ marginBottom: '8px' }}>• {isRtl ? 'أ. أحمد معطي – خبير الأسواق المالية' : 'Mr. Ahmed Moaty – Financial Markets Expert'}</li>
+                        </ul>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                </Grid>
+              </Grid>
             </Box>
           )}
         </Box>
