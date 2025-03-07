@@ -219,7 +219,7 @@ const SummitPage: NextPageWithLayout = () => {
               <Grid item xs={12} md={6}>
                 <Box 
                   component="img"
-                  src="/images/summit.jpg"
+                  src="summit.jpg"
                   alt={isRtl ? 'صورة من الملتقى السابق' : 'Image from previous summit'}
                   sx={{ 
                     width: '100%', 
