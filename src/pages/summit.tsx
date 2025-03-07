@@ -176,6 +176,99 @@ const SummitPage: NextPageWithLayout = () => {
           </Container>
         </HeroSection>
 
+        {/* Arab League Sponsorship Section */}
+        <Box sx={{ 
+          mb: 8, 
+          background: 'linear-gradient(145deg, rgba(40,58,95,0.05) 0%, rgba(25,118,210,0.05) 100%)',
+          borderRadius: 4,
+          p: 4,
+          border: '1px solid rgba(25,118,210,0.1)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <Box sx={{
+            position: 'absolute',
+            top: 0,
+            right: isRtl ? 'auto' : 0,
+            left: isRtl ? 0 : 'auto',
+            width: '150px',
+            height: '150px',
+            opacity: 0.1,
+            transform: 'translate(30%, -30%)',
+            backgroundImage: 'url(/arab-league-logo.png)',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat'
+          }} />
+          
+          <Grid container spacing={4} alignItems="center">
+            <Grid item xs={12} md={3}>
+              <Box
+                component="img"
+                src="/arab-league-logo.png"
+                alt={isRtl ? 'شعار جامعة الدول العربية' : 'Arab League Logo'}
+                sx={{ 
+                  width: '100%',
+                  maxWidth: '200px',
+                  height: 'auto',
+                  display: 'block',
+                  margin: 'auto',
+                  filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={9}>
+              <Typography 
+                variant="h4" 
+                gutterBottom 
+                sx={{ 
+                  textAlign: isRtl ? 'right' : 'left',
+                  color: 'primary.main',
+                  fontWeight: 'bold',
+                  mb: 2
+                }}
+              >
+                {isRtl 
+                  ? 'برعاية جامعة الدول العربية'
+                  : 'Under the Auspices of the Arab League'
+                }
+              </Typography>
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  textAlign: isRtl ? 'right' : 'left',
+                  direction: isRtl ? 'rtl' : 'ltr',
+                  color: 'text.secondary',
+                  fontSize: '1.1rem',
+                  lineHeight: 1.6
+                }}
+              >
+                {isRtl 
+                  ? 'يأتي الملتقى العربي الثاني للحوكمة والتنمية المستدامة تحت رعاية جامعة الدول العربية، مما يؤكد على أهمية هذا الحدث ودوره المحوري في تعزيز التعاون العربي المشترك وتطوير آليات الحوكمة والتنمية المستدامة في المنطقة العربية.'
+                  : 'The Second Arab Governance and Sustainable Development Summit is held under the auspices of the Arab League, highlighting the significance of this event and its pivotal role in enhancing Arab cooperation and developing governance and sustainable development mechanisms in the Arab region.'
+                }
+              </Typography>
+              <Box sx={{ mt: 3, display: 'flex', justifyContent: isRtl ? 'flex-start' : 'flex-end' }}>
+                <Button 
+                  variant="contained" 
+                  color="primary"
+                  size="large"
+                  sx={{ 
+                    px: 4,
+                    py: 1.5,
+                    borderRadius: 2,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    '&:hover': {
+                      boxShadow: '0 6px 16px rgba(0,0,0,0.2)'
+                    }
+                  }}
+                >
+                  {isRtl ? 'المزيد عن الرعاية' : 'Learn More About Sponsorship'}
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+        </Box>
+
         {/* Previous Summit Section with Toggle Button */}
         <Box sx={{ mb: 8, textAlign: 'center' }}>
           <Typography variant="h4" component="h2" gutterBottom sx={{ mb: 2, textAlign: 'center' }}>
