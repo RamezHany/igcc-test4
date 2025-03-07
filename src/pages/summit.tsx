@@ -191,12 +191,12 @@ const SummitPage: NextPageWithLayout = () => {
                   </Typography>
                   <Typography variant="body1" paragraph sx={{ textAlign: isRtl ? 'right' : 'left', direction: isRtl ? 'rtl' : 'ltr' }}>
                     {isRtl 
-                      ? 'تم عقد الملتقى العربي الأول للحوكمة والتنمية المستدامة في مايو 2023 بمشاركة أكثر من 200 خبير ومتخصص من مختلف الدول العربية.'
-                      : 'The First Arab Governance and Sustainable Development Summit was held in May 2023 with the participation of more than 200 experts and specialists from various Arab countries.'}
+                      ? 'تم عقد الملتقى العربي الأول للحوكمة والتنمية المستدامة في ديسمبر 2024 بمشاركة أكثر من 200 خبير ومتخصص من مختلف الدول العربية.'
+                      : 'The First Arab Governance and Sustainable Development Summit was held in December 2024 with the participation of more than 200 experts and specialists from various Arab countries.'}
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 2, mt: 2, justifyContent: isRtl ? 'flex-end' : 'flex-start' }}>
                     <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                      {isRtl ? 'التاريخ: مايو 2023' : 'Date: May 2023'}
+                      {isRtl ? 'التاريخ: ديسمبر 2024' : 'Date: December 2024'}
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                       {isRtl ? 'المكان: القاهرة، مصر' : 'Location: Cairo, Egypt'}
