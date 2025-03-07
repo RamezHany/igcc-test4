@@ -1,5 +1,5 @@
 {
-  "title": "German-Arab Chamber of Industry and Commerce",
+  "title": "International Governance and Compliance Consultation Center",
   "menu": {
     "home": "Home",
     "about": "About Us",
@@ -34,7 +34,7 @@
     "followUs": "Follow Us",
     "newsletter": "Newsletter",
     "subscribeNewsletter": "Subscribe to our newsletter",
-    "copyright": "All rights reserved {year} German-Arab Chamber of Industry and Commerce"
+    "copyright": "All rights reserved {year} IGCC"
   },
   "linkedinPosts": {
     "title": "LinkedIn Posts",
@@ -49,7 +49,7 @@
     "allCategories": "All Categories"
   },
   "home": {
-    "welcome": "Welcome to German-Arab Chamber of Industry and Commerce",
+    "welcome": "Welcome to International Governance and Compliance Consultation Center",
     "latestNews": "Latest News",
     "upcomingEvents": "Upcoming Events",
     "ourServices": "Our Services",
