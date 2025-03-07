@@ -313,7 +313,7 @@ const SummitPage: NextPageWithLayout = () => {
                   <Grid item xs={6} md={3} key={index}>
                     <Box
                       component="img"
-                      src={`/images/gallery/${image}`}
+                      src={image}
                       alt={`Summit photo ${index + 1}`}
                       sx={{ 
                         width: '100%', 
