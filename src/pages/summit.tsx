@@ -375,6 +375,7 @@ const SummitPage: NextPageWithLayout = () => {
                       <li style={{ marginBottom: '8px' }}>• {isRtl ? 'د. السيد الصيفي – أستاذ التمويل والاستثمار' : 'Dr. El-Sayed El-Seify – Professor of Finance and Investment'}</li>
                       <li style={{ marginBottom: '8px' }}>• {isRtl ? 'د. ماجد عبد العظيم – أستاذ الاقتصاد' : 'Dr. Maged Abdel-Azim – Professor of Economics'}</li>
                       <li style={{ marginBottom: '8px' }}>• {isRtl ? 'د. نورهان حسن – مستشار دولي معتمد' : 'Dr. Nourhan Hassan – Certified International Consultant'}</li>
+                      <li style={{ marginBottom: '8px' }}>• {isRtl ? 'المهندس روحى العربى - رجل الاعمال' : 'Eng. Rowhi El-Araby - Businessman'}</li>
                       <li style={{ marginBottom: '8px' }}>• {isRtl ? 'د. رامي فتح الله – شريك ومدير مكتب فتح الله' : 'Dr. Rami Fathalla – Partner and Manager at Fathalla Office'}</li>
                     </ul>
                   </Paper>
