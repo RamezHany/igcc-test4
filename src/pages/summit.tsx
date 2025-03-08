@@ -517,19 +517,28 @@ const SummitPage: NextPageWithLayout = () => {
                 >
                   {(() => {
                     const fullText = t('summit.introduction');
-                    const highlightText = 'يسرنا الإعلان عن انعقاد الجزء الثاني من الملتقى تحت رعاية جامعة الدول العربية والمركز الدولي لاستشارات الحوكمة وإدارة المشروعات (IGCC)، بمشاركة نخبة من الخبراء وقادة الفكر في مجالات الحوكمة والتنمية المستدامة';
                     
-                    const parts = fullText.split(highlightText);
+                    // تطبيق التنسيق المختلف فقط عندما تكون اللغة هي العربية
+                    if (isRtl) {
+                      const highlightText = 'يسرنا الإعلان عن انعقاد الجزء الثاني من الملتقى تحت رعاية جامعة الدول العربية والمركز الدولي لاستشارات الحوكمة وإدارة المشروعات (IGCC)، بمشاركة نخبة من الخبراء وقادة الفكر في مجالات الحوكمة والتنمية المستدامة';
+                      
+                      if (fullText.includes(highlightText)) {
+                        const parts = fullText.split(highlightText);
+                        
+                        return (
+                          <>
+                            {parts[0]}
+                            <span style={{ color: '#1976d2', fontWeight: 'bold' }}>
+                              {highlightText}
+                            </span>
+                            {parts[1]}
+                          </>
+                        );
+                      }
+                    }
                     
-                    return (
-                      <>
-                        {parts[0]}
-                        <span style={{ color: '#1976d2', fontWeight: 'bold' }}>
-                          {highlightText}
-                        </span>
-                        {parts[1]}
-                      </>
-                    );
+                    // إذا لم تكن اللغة العربية أو لم يتم العثور على النص، عرض النص كاملاً بدون تنسيق خاص
+                    return fullText;
                   })()}
                 </Typography>
               </CardContent>
