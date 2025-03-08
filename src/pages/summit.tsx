@@ -243,6 +243,21 @@ const SummitPage: NextPageWithLayout = () => {
                       ? 'تم عقد الملتقى العربي الأول للحوكمة والتنمية المستدامة في ديسمبر 2024 بمشاركة أكثر من 200 خبير ومتخصص من مختلف الدول العربية.'
                       : 'The First Arab Governance and Sustainable Development Summit was held in December 2024 with the participation of more than 200 experts and specialists from various Arab countries.'}
                   </Typography>
+                  <Typography 
+                    variant="body1" 
+                    paragraph 
+                    sx={{ 
+                      textAlign: isRtl ? 'right' : 'left', 
+                      direction: isRtl ? 'rtl' : 'ltr',
+                      color: 'secondary.main',
+                      fontFamily: 'Cairo, sans-serif',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    {isRtl 
+                      ? 'والمركز الدولي لاستشارات الحوكمة وإدارة المشروعات (IGCC)، بمشاركة نخبة من الخبراء وقادة الفكر في مجالات الحوكمة والتنمية المستدامة'
+                      : 'and the International Center for Governance Consulting and Project Management (IGCC), with the participation of a select group of experts and thought leaders in the fields of governance and sustainable development.'}
+                  </Typography>
                   <Box sx={{ display: 'flex', gap: 2, mt: 2, justifyContent: isRtl ? 'flex-end' : 'flex-start' }}>
                     <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                       {isRtl ? 'التاريخ: ديسمبر 2024' : 'Date: December 2024'}
