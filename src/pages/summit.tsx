@@ -160,7 +160,15 @@ const SummitPage: NextPageWithLayout = () => {
               <Typography variant="h3" component="h1" gutterBottom>
                 {t('summit.title')}
               </Typography>
-              <Typography variant="h6">
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 'bold', 
+                  color: 'secondary.main', 
+                  fontSize: '1.25rem', 
+                  mb: 2 
+                }}
+              >
                 {t('summit.subtitle')}
               </Typography>
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
