@@ -512,13 +512,10 @@ const SummitPage: NextPageWithLayout = () => {
                   paragraph 
                   sx={{ 
                     textAlign: isRtl ? 'right' : 'left',
-                    direction: isRtl ? 'rtl' : 'ltr',
-                    '& span': { color: 'primary.main' }
+                    direction: isRtl ? 'rtl' : 'ltr'
                   }}
                 >
-                  {t('summit.introduction').split('يسرنا الإعلان عن انعقاد الجزء الثاني من الملتقى تحت رعاية جامعة الدول العربية والمركز الدولي لاستشارات الحوكمة وإدارة المشروعات (IGCC)، بمشاركة نخبة من الخبراء وقادة الفكر في مجالات الحوكمة والتنمية المستدامة').map((part, index) => (
-                    index === 1 ? <span key={index}>يسرنا الإعلان عن انعقاد الجزء الثاني من الملتقى تحت رعاية جامعة الدول العربية والمركز الدولي لاستشارات الحوكمة وإدارة المشروعات (IGCC)، بمشاركة نخبة من الخبراء وقادة الفكر في مجالات الحوكمة والتنمية المستدامة</span> : part
-                  ))}
+                  {t('summit.introduction')}
                 </Typography>
               </CardContent>
             </IntroCard>
