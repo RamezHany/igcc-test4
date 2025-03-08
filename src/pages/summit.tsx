@@ -515,7 +515,22 @@ const SummitPage: NextPageWithLayout = () => {
                     direction: isRtl ? 'rtl' : 'ltr'
                   }}
                 >
-                  {t('summit.introduction')}
+                  {(() => {
+                    const fullText = t('summit.introduction');
+                    const highlightText = 'يسرنا الإعلان عن انعقاد الجزء الثاني من الملتقى تحت رعاية جامعة الدول العربية والمركز الدولي لاستشارات الحوكمة وإدارة المشروعات (IGCC)، بمشاركة نخبة من الخبراء وقادة الفكر في مجالات الحوكمة والتنمية المستدامة';
+                    
+                    const parts = fullText.split(highlightText);
+                    
+                    return (
+                      <>
+                        {parts[0]}
+                        <span style={{ color: '#1976d2', fontWeight: 'bold' }}>
+                          {highlightText}
+                        </span>
+                        {parts[1]}
+                      </>
+                    );
+                  })()}
                 </Typography>
               </CardContent>
             </IntroCard>
