@@ -518,7 +518,7 @@ const SummitPage: NextPageWithLayout = () => {
                   {(() => {
                     const fullText = t('summit.introduction');
                     
-                    // تطبيق التنسيق المختلف فقط عندما تكون اللغة هي العربية
+                    // تطبيق التنسيق المختلف للنص العربي عندما تكون اللغة هي العربية
                     if (isRtl) {
                       const highlightText = 'يسرنا الإعلان عن انعقاد الجزء الثاني من الملتقى تحت رعاية جامعة الدول العربية والمركز الدولي لاستشارات الحوكمة وإدارة المشروعات (IGCC)، بمشاركة نخبة من الخبراء وقادة الفكر في مجالات الحوكمة والتنمية المستدامة';
                       
@@ -535,9 +535,27 @@ const SummitPage: NextPageWithLayout = () => {
                           </>
                         );
                       }
+                    } 
+                    // تطبيق التنسيق المختلف للنص الإنجليزي عندما تكون اللغة هي الإنجليزية
+                    else {
+                      const highlightText = 'We are pleased to announce the convening of the forum\'s second edition under the patronage of the Arab League and the International Governance and Project Management Consultancy Center (IGCC), with participation from a select group of experts and thought leaders in governance and sustainable development';
+                      
+                      if (fullText.includes(highlightText)) {
+                        const parts = fullText.split(highlightText);
+                        
+                        return (
+                          <>
+                            {parts[0]}
+                            <span style={{ color: '#1976d2', fontWeight: 'bold' }}>
+                              {highlightText}
+                            </span>
+                            {parts[1]}
+                          </>
+                        );
+                      }
                     }
                     
-                    // إذا لم تكن اللغة العربية أو لم يتم العثور على النص، عرض النص كاملاً بدون تنسيق خاص
+                    // إذا لم يتم العثور على النص، عرض النص كاملاً بدون تنسيق خاص
                     return fullText;
                   })()}
                 </Typography>
