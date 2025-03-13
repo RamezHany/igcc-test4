@@ -86,7 +86,7 @@ function SiteMap() {
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   try {
     // Fetch news data with caching
-    const newsResponse = await fetch('https://raw.githubusercontent.com/RamezHany/IGCCe-tr/main/news.json', {
+    const newsResponse = await fetch('https://raw.githubusercontent.com/RamezHany/igcc-test4/main/news.json', {
       cache: 'force-cache'
     });
     

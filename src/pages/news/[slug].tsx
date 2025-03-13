@@ -160,7 +160,7 @@ const NewsDetail: FC<NewsDetailProps> = ({ newsItem }) => {
 export const getStaticPaths: GetStaticPaths = async () => {
     try {
         // Fetch data directly from GitHub with caching
-        const response = await fetch('https://raw.githubusercontent.com/RamezHany/IGCCe-tr/main/news.json', {
+        const response = await fetch('https://raw.githubusercontent.com/RamezHany/igcc-test4/main/news.json', {
             cache: 'force-cache' // Use force-cache to maximize caching
         });
         
@@ -205,7 +205,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 export const getStaticProps: GetStaticProps = async ({ params, locale }) => {
     try {
         // Fetch data directly from GitHub with caching
-        const response = await fetch('https://raw.githubusercontent.com/RamezHany/IGCCe-tr/main/news.json', {
+        const response = await fetch('https://raw.githubusercontent.com/RamezHany/igcc-test4/main/news.json', {
             cache: 'force-cache' // Use force-cache to maximize caching
         });
         
