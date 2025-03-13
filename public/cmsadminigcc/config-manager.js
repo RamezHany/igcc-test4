@@ -3,8 +3,6 @@
  * This file contains common functions used across the configuration pages
  */
 
-require('dotenv').config();
-
 // GitHub repository information
 const REPO_OWNER = 'RamezHany';
 const REPO_NAME = 'IGCCe-tr';
@@ -13,7 +11,7 @@ const API_BASE_URL = 'https://api.github.com';
 const RAW_CONTENT_BASE_URL = 'https://raw.githubusercontent.com/RamezHany/IGCCe-tr/main';
 
 // Default GitHub token - this is used if no token is provided by the user
-const DEFAULT_GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const DEFAULT_GITHUB_TOKEN = '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'; // Replace with a valid token
 
 /**
  * Get GitHub token from localStorage or use the default token
