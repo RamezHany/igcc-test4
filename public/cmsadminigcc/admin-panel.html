@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صفحة الإدارة</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        .logo {
+            margin: 20px 0;
+        }
+        .logo img {
+            width: 180px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s;
+        }
+        .container:hover {
+            transform: translateY(-5px);
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .icons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: black;
+            padding: 15px;
+            background: #ffffff;
+            border-radius: 10px;
+            transition: all 0.3s;
+            width: 120px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .icon:hover {
+            background: #e3e3e3;
+            transform: scale(1.05);
+        }
+        .icon img {
+            width: 60px;
+            height: 60px;
+        }
+        .icon span {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: gray;
+            padding: 15px 0;
+        }
+        .logout-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        .logout-btn:hover {
+            background-color: #d32f2f;
+        }
+        .session-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">
+        <img src="https://res.cloudinary.com/dduxyvs3x/image/upload/v1735824611/illustraV.svg" alt="illustraV Logo">
+    </div>
+    <div class="container">
+        <h2>لوحة التحكم</h2>
+        <div class="icons">
+            <a href="news.html" class="icon">
+                <img src="https://cdn-icons-png.flaticon.com/512/1828/1828817.png" alt="أخبار">
+                <span>إدارة الأخبار</span>
+            </a>
+            <a href="partner.html" class="icon">
+                <img src="https://cdn-icons-png.flaticon.com/512/3082/3082383.png" alt="شركاء">
+                <span>إدارة الشركاء</span>
+            </a>
+            <a href="dr-photo.html" class="icon">
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="صورة الدكتورة">
+                <span>تغيير صورة الدكتورة</span>
+            </a>
+            <a href="dr-vedio.html" class="icon">
+                <img src="https://cdn-icons-png.flaticon.com/512/3176/3176367.png" alt="فيديو الدكتورة">
+                <span>تحديث فيديو الدكتورة</span>
+            </a>
+            <a href="summit.html" class="icon">
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135731.png" alt="صورة الملتقى">
+                <span>تغيير صورة الملتقى</span>
+            </a>
+            <a href="linkedin-admin.html" class="icon">
+                <img src="https://cdn-icons-png.flaticon.com/512/3536/3536505.png" alt="لينكدان">
+                <span>إدارة بوستات لينكدان</span>
+            </a>
+        </div>
+        <div class="session-info" id="sessionTimer"></div>
+        <button id="logoutBtn" class="logout-btn">تسجيل الخروج</button>
+    </div>
+    <div class="footer">
+        &copy; 2025 illustraV.com - All rights reserved
+    </div>
+
+    <script>
+        // وقت انتهاء الجلسة (30 دقيقة = 1800000 مللي ثانية)
+        const SESSION_DURATION = 1800000;
+        
+        // التحقق من حالة تسجيل الدخول
+        function checkAuthentication() {
+            const authenticated = localStorage.getItem('adminAuthenticated');
+            const loginTime = localStorage.getItem('adminLoginTime');
+            const currentTime = new Date().getTime();
+            
+            // إذا لم يكن المستخدم مسجل دخوله أو انتهت صلاحية الجلسة
+            if (authenticated !== 'true' || !loginTime || (currentTime - loginTime) > SESSION_DURATION) {
+                // إزالة بيانات الجلسة القديمة
+                localStorage.removeItem('adminAuthenticated');
+                localStorage.removeItem('adminLoginTime');
+                
+                // توجيه المستخدم إلى صفحة تسجيل الدخول
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+        
+        // تحديث عداد الوقت المتبقي للجلسة
+        function updateSessionTimer() {
+            const loginTime = parseInt(localStorage.getItem('adminLoginTime'));
+            const currentTime = new Date().getTime();
+            const elapsedTime = currentTime - loginTime;
+            const remainingTime = SESSION_DURATION - elapsedTime;
+            
+            if (remainingTime <= 0) {
+                checkAuthentication(); // سيقوم بتوجيه المستخدم إلى صفحة تسجيل الدخول
+                return;
+            }
+            
+            // تحويل الوقت المتبقي إلى دقائق وثواني
+            const minutes = Math.floor(remainingTime / 60000);
+            const seconds = Math.floor((remainingTime % 60000) / 1000);
+            
+            // عرض الوقت المتبقي
+            document.getElementById('sessionTimer').textContent = 
+                `الوقت المتبقي للجلسة: ${minutes} دقيقة و ${seconds} ثانية`;
+        }
+        
+        // تسجيل الخروج
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('adminAuthenticated');
+            localStorage.removeItem('adminLoginTime');
+            window.location.href = 'login.html';
+        });
+        
+        // التحقق عند تحميل الصفحة
+        window.addEventListener('load', function() {
+            if (!checkAuthentication()) return;
+            
+            // تحديث عداد الوقت كل ثانية
+            updateSessionTimer();
+            setInterval(updateSessionTimer, 1000);
+        });
+    </script>
+</body>
+</html>

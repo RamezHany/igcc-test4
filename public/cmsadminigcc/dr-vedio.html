@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Doctor Video</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --secondary: #f5f6fa;
+            --text: #2c3e50;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: var(--text);
+            background-color: var(--secondary);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .update-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .update-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 0 0 10px 10px;
+            transition: width 0.3s ease;
+        }
+
+        .update-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .update-status {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        input[type="text"] {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            align-self: flex-start;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            background: #357abd;
+        }
+
+        .current-embed {
+            margin-top: 2rem;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .current-embed h2 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .video-container {
+            position: relative;
+            overflow: hidden;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            margin-top: 1rem;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .success-message {
+            background-color: var(--success);
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .help-text {
+            color: #666;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>Manage Doctor Video</h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="update-section">
+            <h2>Update Doctor Video Embed</h2>
+            <p>Enter a new Vimeo video URL to update the doctor's video.</p>
+            <div class="input-group">
+                <input type="text" id="vimeoInput" placeholder="https://vimeo.com/123456789 or https://player.vimeo.com/video/123456789">
+                <button onclick="updateVimeoEmbed()">Update Video</button>
+            </div>
+            <p class="help-text">You can enter either a regular Vimeo URL (https://vimeo.com/123456789) or an embed URL (https://player.vimeo.com/video/123456789)</p>
+            <div class="update-progress" id="updateProgress"></div>
+            <div class="success-message" id="successMessage">Video embed updated successfully in config.json!</div>
+        </div>
+
+        <div class="current-embed">
+            <h2>Current Doctor Video</h2>
+            <div id="currentEmbedContainer">Loading...</div>
+        </div>
+    </div>
+
+    <div class="update-overlay" id="updateOverlay">
+        <div class="update-status">
+            <div class="spinner"></div>
+            <p>Updating video link...</p>
+        </div>
+    </div>
+
+    <script src="config-manager.js"></script>
+    <script>
+        let configData = null;
+        let configSha = null;
+        
+        // Fetch the current config.json
+        async function fetchConfig() {
+            try {
+                const result = await fetchConfigFromGitHub();
+                configData = result.configData;
+                configSha = result.configSha;
+                
+                console.log('Fetched config data:', JSON.stringify(configData));
+                
+                displayCurrentEmbed();
+                
+                // Pre-fill the input with current link
+                if (configData && configData.vimeoLink) {
+                    document.getElementById('vimeoInput').value = configData.vimeoLink;
+                } else if (configData && configData.vimeoLink) {
+                    // For backward compatibility with old config format
+                    console.log('Found vimeoLink property instead of vimeoLink');
+                    configData.vimeoLink = configData.vimeoLink;
+                    document.getElementById('vimeoInput').value = configData.vimeoLink;
+                }
+            } catch (error) {
+                console.error('Error fetching config:', error);
+                document.getElementById('currentEmbedContainer').innerHTML = 'Error loading current video.';
+            }
+        }
+
+        // Display the current embed
+        function displayCurrentEmbed() {
+            const container = document.getElementById('currentEmbedContainer');
+            
+            // Check for vimeoLink property
+            const videoUrl = configData && configData.vimeoLink;
+            
+            if (videoUrl) {
+                console.log('Displaying video embed with URL:', videoUrl);
+                
+                // Use the exact URL from the config without modification
+                container.innerHTML = `
+                    <p>Current Vimeo link in config.json:</p>
+                    <code>${videoUrl}</code>
+                    <div class="video-container">
+                        <iframe src="${videoUrl}" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                `;
+            } else {
+                console.log('No video found in config data:', configData);
+                container.innerHTML = 'No Vimeo link found in config.json';
+            }
+        }
+
+        // Validate Vimeo URL
+        function isValidVimeoUrl(url) {
+            // Accept any URL that contains vimeo.com
+            return url.includes('vimeo.com');
+        }
+
+        // Extract Vimeo ID from various URL formats
+        function extractVimeoId(url) {
+            const match = url.match(/^https:\/\/(player\.)?vimeo\.com\/(video\/)?(\d+)/i);
+            if (!match) {
+                console.error('Failed to extract Vimeo ID from URL:', url);
+                return null;
+            }
+            console.log('Extracted Vimeo ID:', match[3], 'from URL:', url);
+            return match[3];
+        }
+
+        // Update the Vimeo embed in config.json
+        async function updateVimeoEmbed() {
+            const vimeoUrl = document.getElementById('vimeoInput').value.trim();
+            
+            if (!vimeoUrl) {
+                alert('Please enter a Vimeo embed URL.');
+                return;
+            }
+            
+            if (!isValidVimeoUrl(vimeoUrl)) {
+                alert('Please enter a valid Vimeo embed URL (e.g., https://player.vimeo.com/video/123456789)');
+                return;
+            }
+            
+            // Get the base URL without any existing parameters
+            let embedUrl = vimeoUrl;
+            if (embedUrl.includes('?')) {
+                embedUrl = embedUrl.split('?')[0];
+            }
+            
+            // Add the required parameters
+            embedUrl += '?h=dcc436d4f4&badge=0&autopause=0&player_id=0&app_id=58479&muted=0&autoplay=1';
+            
+            console.log('Using URL with added parameters:', embedUrl);
+            
+            showUpdateStatus();
+            updateUpdateProgress(20);
+            
+            try {
+                console.log('Current config data before update:', JSON.stringify(configData));
+                
+                // Create a new copy of the config data with the updated vimeoLink property
+                const updatedConfig = JSON.parse(JSON.stringify(configData));
+                updatedConfig.vimeoLink = embedUrl;
+                
+                // For backward compatibility, also update doctorVideo if it exists
+                if ('doctorVideo' in updatedConfig) {
+                    updatedConfig.doctorVideo = embedUrl;
+                }
+                
+                console.log('Updated config data to send:', JSON.stringify(updatedConfig));
+                
+                // Update config.json with new Vimeo embed
+                updateUpdateProgress(50);
+                const result = await updateConfigOnGitHub(
+                    updatedConfig,
+                    configSha,
+                    null, // Use default token
+                    'Update doctor video embed in config.json with specific parameters'
+                );
+                
+                console.log('Update result:', JSON.stringify(result));
+                
+                configData = result.configData;
+                configSha = result.configSha;
+                
+                updateUpdateProgress(100);
+                hideUpdateStatus();
+                
+                // Show success message
+                const successMessage = document.getElementById('successMessage');
+                successMessage.style.display = 'block';
+                
+                // Clear input
+                document.getElementById('vimeoInput').value = '';
+                
+                // Refresh the current embed display
+                displayCurrentEmbed();
+                
+                // Hide success message after 5 seconds
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 5000);
+                
+            } catch (error) {
+                console.error('Error updating Vimeo embed:', error);
+                hideUpdateStatus();
+                alert(`Error updating Vimeo embed: ${error.message}`);
+            }
+        }
+        
+        // Show update status overlay
+        function showUpdateStatus() {
+            document.getElementById('updateOverlay').style.display = 'flex';
+        }
+
+        // Hide update status overlay
+        function hideUpdateStatus() {
+            document.getElementById('updateOverlay').style.display = 'none';
+        }
+
+        // Update progress bar
+        function updateUpdateProgress(percent) {
+            document.getElementById('updateProgress').style.width = `${percent}%`;
+        }
+
+        // Check for saved token on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchConfig();
+        });
+    </script>
+
+    <!-- Authentication Script -->
+    <script src="auth.js"></script>
+
+</body>
+</html>

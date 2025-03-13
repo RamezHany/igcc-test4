@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IGCC LinkedIn Admin Panel</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            padding: 20px; 
+            background-color: #f5f5f5;
+            direction: rtl;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: auto; 
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 28px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: #3498db;
+            border-radius: 2px;
+        }
+        input, textarea { 
+            display: block; 
+            width: 100%; 
+            margin: 15px 0; 
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+        input:focus, textarea:focus { 
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.2);
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .button-group {
+            display: flex;
+            margin-top: 15px;
+        }
+        .edit-btn {
+            background: #2ecc71;
+        }
+        .edit-btn:hover {
+            background: #27ae60;
+        }
+        .delete-btn {
+            background: #e74c3c;
+        }
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+        .loader {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .success-message {
+            display: none;
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        #cancelBtn {
+            display: none;
+            background-color: #6c757d;
+        }
+        #cancelBtn:hover {
+            background-color: #5a6268;
+        }
+        .linkedin-post {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .linkedin-post h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .linkedin-embed {
+            width: 100%;
+            height: 500px;
+            border: none;
+            margin-top: 10px;
+        }
+        .star-post {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: gold;
+            font-size: 24px;
+            text-shadow: 0 0 3px rgba(0,0,0,0.3);
+        }
+        .star-rating {
+            margin: 15px 0;
+        }
+        .star-rating label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .star-btn {
+            background-color: transparent;
+            border: 2px solid #f1c40f;
+            color: #f1c40f;
+            font-size: 18px;
+            width: 40px;
+            height: 40px;
+            margin-right: 5px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .star-btn.active {
+            background-color: #f1c40f;
+            color: white;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+            .button-group button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>إدارة منشورات لينكدان IGCC</h2>
+        
+        <form id="linkedinForm" onsubmit="return false;">
+            <input type="hidden" id="linkedin_editingId" value="">
+            <input type="text" id="linkedin_title_en" placeholder="العنوان (بالإنجليزية)">
+            <input type="text" id="linkedin_title_ar" placeholder="العنوان (بالعربية)">
+            <input type="text" id="linkedin_embedUrl" placeholder="رابط التضمين من لينكدان">
+            <div class="star-rating">
+                <label>تقييم النجوم:</label>
+                <button type="button" class="star-btn" data-stars="0" onclick="selectStars(0)">0</button>
+                <button type="button" class="star-btn" data-stars="1" onclick="selectStars(1)">1</button>
+                <button type="button" class="star-btn" data-stars="2" onclick="selectStars(2)">2</button>
+                <button type="button" class="star-btn" data-stars="3" onclick="selectStars(3)">3</button>
+                <input type="hidden" id="linkedin_starRating" value="0">
+            </div>
+            <button onclick="addLinkedinPost()" id="linkedin_submitBtn">إضافة منشور</button>
+            <button onclick="cancelLinkedinEdit()" id="linkedin_cancelBtn">إلغاء التعديل</button>
+        </form>
+        <div id="linkedin_loader" class="loader"></div>
+        <div id="linkedin_successMessage" class="success-message">تم إضافة المنشور بنجاح!</div>
+        <div id="linkedinPostsList"></div>
+    </div>
+
+    <script>
+        const repo = "RamezHany/IGCCe-tr";
+        const token = "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";
+        const apiUrl = `https://api.github.com/repos/${repo}/contents/linkedin-posts.json`;
+        const linkedinJsonPath = 'linkedin-posts.json';
+
+        // Helper function to safely encode content for GitHub API
+        function encodeContent(content) {
+            // Convert the content to a UTF-8 string
+            const str = JSON.stringify(content, null, 2);
+            // Convert string to UTF-8 bytes
+            const utf8Bytes = new TextEncoder().encode(str);
+            // Convert bytes to base64
+            return btoa(String.fromCharCode.apply(null, utf8Bytes));
+        }
+
+        // Helper function to safely decode content from GitHub API
+        function decodeContent(base64Content) {
+            try {
+                // Decode base64 to bytes
+                const binaryStr = atob(base64Content);
+                // Convert binary string to UTF-8 bytes
+                const bytes = Uint8Array.from(binaryStr, c => c.charCodeAt(0));
+                // Convert UTF-8 bytes to string
+                const str = new TextDecoder().decode(bytes);
+                // Parse JSON
+                return JSON.parse(str);
+            } catch (error) {
+                console.error("Error decoding content:", error);
+                return { linkedinPosts: [] };
+            }
+        }
+        
+        async function getLinkedinPosts() {
+            try {
+                document.getElementById("linkedin_loader").style.display = "block";
+                
+                // Try to fetch from local file first
+                try {
+                    const localResponse = await fetch(linkedinJsonPath);
+                    if (localResponse.ok) {
+                        const data = await localResponse.json();
+                        displayLinkedinPosts(data.linkedinPosts);
+                        document.getElementById("linkedin_loader").style.display = "none";
+                        return;
+                    }
+                } catch (localError) {
+                    console.log("Local file not found, trying GitHub API");
+                }
+                
+                // If local file not available, try GitHub API
+                const response = await fetch(apiUrl, { headers: { Authorization: `token ${token}` } });
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        // If file doesn't exist, create it with empty posts array
+                        await fetch(apiUrl, {
+                            method: "PUT",
+                            headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                message: "Create linkedin-posts.json",
+                                content: encodeContent({ linkedinPosts: [] })
+                            })
+                        });
+                        displayLinkedinPosts([]);
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const content = decodeContent(data.content);
+                displayLinkedinPosts(content.linkedinPosts || []);
+                
+            } catch (error) {
+                console.error("Error fetching LinkedIn posts:", error);
+                alert("حدث خطأ أثناء جلب منشورات لينكدان");
+            } finally {
+                document.getElementById("linkedin_loader").style.display = "none";
+            }
+        }
+        
+        function displayLinkedinPosts(posts) {
+            const postsList = document.getElementById('linkedinPostsList');
+            postsList.innerHTML = '';
+            
+            if (posts.length === 0) {
+                postsList.innerHTML = '<p style="text-align: center; color: #7f8c8d;">لا توجد منشورات لينكدان حالياً</p>';
+                return;
+            }
+            
+            posts.forEach(post => {
+                const div = document.createElement('div');
+                div.className = 'linkedin-post';
+                
+                // Get star rating from post ID
+                let starRating = 0;
+                if (post.id === '1') starRating = 1;
+                else if (post.id === '2') starRating = 2;
+                else if (post.id === '3') starRating = 3;
+                
+                // Create stars HTML based on rating
+                let starsHtml = '';
+                if (starRating > 0) {
+                    starsHtml = '<div class="star-post">' + '★'.repeat(starRating) + '</div>';
+                }
+                
+                div.innerHTML = `
+                    ${starsHtml}
+                    <h3>${post.title}</h3>
+                    <p>${post.title_ar}</p>
+                    <iframe class="linkedin-embed" src="${post.embedUrl}" frameborder="0" allowfullscreen></iframe>
+                    <div class="button-group">
+                        <button class="edit-btn" 
+                                onclick='editLinkedinPost(${JSON.stringify(post)})'>تعديل</button>
+                        <button class="delete-btn" 
+                                onclick="confirmDeleteLinkedinPost('${post.id}')">حذف</button>
+                    </div>
+                `;
+                
+                postsList.appendChild(div);
+            });
+        }
+        
+        function editLinkedinPost(post) {
+            document.getElementById('linkedin_editingId').value = post.id;
+            document.getElementById('linkedin_title_en').value = post.title;
+            document.getElementById('linkedin_title_ar').value = post.title_ar;
+            document.getElementById('linkedin_embedUrl').value = post.embedUrl;
+            
+            // Set star rating based on post ID
+            let starRating = 0;
+            if (post.id === '1') starRating = 1;
+            else if (post.id === '2') starRating = 2;
+            else if (post.id === '3') starRating = 3;
+            
+            selectStars(starRating);
+            
+            document.getElementById('linkedin_submitBtn').textContent = 'تحديث المنشور';
+            document.getElementById('linkedin_cancelBtn').style.display = 'inline-block';
+            
+            // Scroll to form
+            document.getElementById('linkedinForm').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function cancelLinkedinEdit() {
+            document.getElementById('linkedinForm').reset();
+            document.getElementById('linkedin_editingId').value = '';
+            document.getElementById('linkedin_starRating').value = '0';
+            selectStars(0);
+            document.getElementById('linkedin_submitBtn').textContent = 'إضافة منشور';
+            document.getElementById('linkedin_cancelBtn').style.display = 'none';
+        }
+        
+        async function addLinkedinPost() {
+            try {
+                document.getElementById("linkedin_loader").style.display = "block";
+                
+                const editingId = document.getElementById('linkedin_editingId').value;
+                const title = document.getElementById('linkedin_title_en').value;
+                const title_ar = document.getElementById('linkedin_title_ar').value;
+                const embedUrl = document.getElementById('linkedin_embedUrl').value;
+                const starRating = document.getElementById('linkedin_starRating').value;
+                
+                if (!title || !title_ar || !embedUrl) {
+                    alert("يرجى ملء جميع الحقول المطلوبة");
+                    return;
+                }
+                
+                // Get current posts data
+                let posts = [];
+                
+                try {
+                    // Try local file first
+                    const localResponse = await fetch(linkedinJsonPath);
+                    if (localResponse.ok) {
+                        const data = await localResponse.json();
+                        posts = data.linkedinPosts || [];
+                    }
+                } catch (localError) {
+                    // If local file not available, try GitHub API
+                    const response = await fetch(apiUrl, { headers: { Authorization: `token ${token}` } });
+                    if (response.ok) {
+                        const data = await response.json();
+                        const content = decodeContent(data.content);
+                        posts = content.linkedinPosts || [];
+                    }
+                }
+                
+                if (editingId) {
+                    // Update existing post
+                    const index = posts.findIndex(post => post.id === editingId);
+                    if (index !== -1) {
+                        // Determine the post ID based on star rating
+                        let postId;
+                        if (starRating === '1' || starRating === '2' || starRating === '3') {
+                            postId = starRating;
+                        } else {
+                            // If not a star post, keep original ID or generate a new one > 3
+                            postId = editingId;
+                            if (['1', '2', '3'].includes(postId)) {
+                                // If it was a star post but now isn't, give it a new ID
+                                postId = (Math.max(...posts.map(p => parseInt(p.id))) + 1).toString();
+                            }
+                        }
+                        
+                        // If we're changing to a star ID, check if it's already in use
+                        if (['1', '2', '3'].includes(postId) && postId !== editingId) {
+                            const existingStarPost = posts.find(p => p.id === postId);
+                            if (existingStarPost) {
+                                // Give the existing star post a new ID
+                                const newId = (Math.max(...posts.map(p => parseInt(p.id))) + 1).toString();
+                                const starPostIndex = posts.findIndex(p => p.id === postId);
+                                posts[starPostIndex].id = newId;
+                            }
+                        }
+                        
+                        posts[index] = {
+                            id: postId,
+                            title,
+                            title_ar,
+                            embedUrl
+                        };
+                    }
+                } else {
+                    // Add new post with ID based on star rating
+                    let newId;
+                    if (starRating === '1' || starRating === '2' || starRating === '3') {
+                        newId = starRating;
+                        // Check if this star ID is already in use
+                        const existingStarPost = posts.find(p => p.id === newId);
+                        if (existingStarPost) {
+                            // Give the existing star post a new ID
+                            const replacedId = (Math.max(...posts.map(p => parseInt(p.id))) + 1).toString();
+                            const starPostIndex = posts.findIndex(p => p.id === newId);
+                            posts[starPostIndex].id = replacedId;
+                        }
+                    } else {
+                        // If not a star post, generate a new ID > 3
+                        newId = posts.length > 0 ? 
+                            (Math.max(...posts.map(post => parseInt(post.id))) + 1).toString() : 
+                            "4";  // Start at 4 if no posts exist
+                    }
+                    
+                    posts.push({
+                        id: newId,
+                        title,
+                        title_ar,
+                        embedUrl
+                    });
+                }
+                
+                // Save updated data
+                await saveLinkedinPosts({ linkedinPosts: posts });
+                
+                // Clear form and show success message
+                document.getElementById('linkedinForm').reset();
+                document.getElementById('linkedin_editingId').value = '';
+                document.getElementById('linkedin_submitBtn').textContent = 'إضافة منشور';
+                document.getElementById('linkedin_cancelBtn').style.display = 'none';
+                
+                const successMessage = document.getElementById('linkedin_successMessage');
+                successMessage.style.display = 'block';
+                successMessage.textContent = editingId ? 'تم تحديث المنشور بنجاح!' : 'تم إضافة المنشور بنجاح!';
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+                
+                // Refresh posts list
+                getLinkedinPosts();
+                
+            } catch (error) {
+                console.error("Error adding LinkedIn post:", error);
+                alert("حدث خطأ أثناء إضافة منشور لينكدان");
+            } finally {
+                document.getElementById("linkedin_loader").style.display = "none";
+            }
+        }
+        
+        function confirmDeleteLinkedinPost(id) {
+            if (confirm("هل أنت متأكد من حذف هذا المنشور؟")) {
+                deleteLinkedinPost(id);
+            }
+        }
+        
+        async function deleteLinkedinPost(id) {
+            try {
+                document.getElementById("linkedin_loader").style.display = "block";
+                
+                // Get current posts data
+                let posts = [];
+                let sha = null;
+                
+                // Try GitHub API to get current data and SHA
+                const response = await fetch(apiUrl, { headers: { Authorization: `token ${token}` } });
+                if (response.ok) {
+                    const data = await response.json();
+                    sha = data.sha;
+                    const content = decodeContent(data.content);
+                    posts = content.linkedinPosts || [];
+                } else {
+                    // If GitHub API fails, try local file
+                    const localResponse = await fetch(linkedinJsonPath);
+                    if (localResponse.ok) {
+                        const data = await localResponse.json();
+                        posts = data.linkedinPosts || [];
+                    }
+                }
+                
+                // Remove post with matching ID
+                posts = posts.filter(post => post.id !== id);
+                
+                // Save updated data
+                await saveLinkedinPosts({ linkedinPosts: posts }, sha);
+                
+                // Refresh posts list
+                getLinkedinPosts();
+                
+            } catch (error) {
+                console.error("Error deleting LinkedIn post:", error);
+                alert("حدث خطأ أثناء حذف منشور لينكدان");
+            } finally {
+                document.getElementById("linkedin_loader").style.display = "none";
+            }
+        }
+        
+        async function saveLinkedinPosts(data, sha = null) {
+            try {
+                // Try to save to both local file and GitHub
+                
+                // 1. Save to GitHub API
+                let method = 'PUT';
+                let requestBody = {
+                    message: "Update LinkedIn posts",
+                    content: encodeContent(data)
+                };
+                
+                if (sha) {
+                    requestBody.sha = sha;
+                } else {
+                    // If no SHA provided, try to get it
+                    try {
+                        const response = await fetch(apiUrl, { headers: { Authorization: `token ${token}` } });
+                        if (response.ok) {
+                            const fileData = await response.json();
+                            requestBody.sha = fileData.sha;
+                        }
+                    } catch (error) {
+                        console.error("Error getting SHA:", error);
+                    }
+                }
+                
+                await fetch(apiUrl, {
+                    method: method,
+                    headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                // 2. Also update local file for faster access
+                // Note: This is just for development. In production, you'd only use the GitHub API
+                // or a server-side API to save the data.
+                
+            } catch (error) {
+                console.error("Error saving LinkedIn posts:", error);
+                throw error;
+            }
+        }
+
+        // Function to handle star button selection
+        function selectStars(num) {
+            // Update all star buttons
+            const starButtons = document.querySelectorAll('.star-btn');
+            starButtons.forEach(btn => {
+                const btnStars = parseInt(btn.getAttribute('data-stars'));
+                if (btnStars === num) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            // Update hidden input value
+            document.getElementById('linkedin_starRating').value = num;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            getLinkedinPosts();
+        });
+    </script>
+
+    <!-- Authentication Script -->
+    <script src="auth.js"></script>
+
+</body>
+</html>
