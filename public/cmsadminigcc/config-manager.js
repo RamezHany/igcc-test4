@@ -11,7 +11,7 @@ const API_BASE_URL = 'https://api.github.com';
 const RAW_CONTENT_BASE_URL = 'https://raw.githubusercontent.com/RamezHany/IGCCe-tr/main';
 
 // Default GitHub token - this is used if no token is provided by the user
-const DEFAULT_GITHUB_TOKEN = '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'; // Replace with a valid token
+const DEFAULT_GITHUB_TOKEN = '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'; // Replace with a valid token
 
 /**
  * Get GitHub token from localStorage or use the default token
