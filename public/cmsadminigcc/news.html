@@ -350,7 +350,7 @@
 
     <script>
         const repo = "RamezHany/IGCCe-tr";
-        const token = "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";
+        const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
         const apiUrl = `https://api.github.com/repos/${repo}/contents/news.json`;
 
         // Helper function to safely encode content for GitHub API
