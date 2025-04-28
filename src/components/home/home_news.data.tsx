@@ -29,7 +29,7 @@ export async function loadNewsData(locale: string): Promise<News[]> {
         console.log(`Fetching fresh news data for locale: ${locale}`);
         
         // Use direct GitHub URL since we know the structure
-        const response = await fetch('https://raw.githubusercontent.com/RamezHany/IGCCe-tr/refs/heads/main/news.json', {
+        const response = await fetch('https://raw.githubusercontent.com/RamezHany/igcc-test4/main/news.json', {
             cache: 'no-cache' // Ensure we get fresh data when needed
         });
         
