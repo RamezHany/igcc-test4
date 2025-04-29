@@ -27,7 +27,7 @@
       ],
       "image": [
         {
-          "url": "https://raw.githubusercontent.com/RamezHany/igcc-test4/main/images/takkween-advanced-industries-group---grc-2024.png",
+          "url": "https://raw.githubusercontent.com/RamezHany/igcc-test4/main/public/images/ooopppopo.png",
           "width": 800,
           "height": 600
         }
@@ -57,7 +57,7 @@
       ],
       "image": [
         {
-          "url": "https://raw.githubusercontent.com/RamezHany/igcc-test4/main/images/international-center-delivers-certified-compliance-officer-program-to-madayn-group-in-oman.png",
+          "url": "https://raw.githubusercontent.com/RamezHany/igcc-test4/main/public/images/international-center-delivers-certified-compliance-officer-program-to-madayn-group-in-oman.png",
           "width": 800,
           "height": 600
         }
@@ -92,7 +92,7 @@
       ],
       "image": [
         {
-          "url": "https://raw.githubusercontent.com/RamezHany/igcc-test4/main/images/the-inaugural-international-conference-on-community-diplomacy-pioneers,-with-igcc-as-a-bronze-sponsor.png",
+          "url": "https://raw.githubusercontent.com/RamezHany/igcc-test4/main/public/images/the-inaugural-international-conference-on-community-diplomacy-pioneers,-with-igcc-as-a-bronze-sponsor.png",
           "width": 800,
           "height": 600
         }
@@ -100,7 +100,7 @@
       "date": "2025-02-23"
     },
     {
-      "id": "1741196285420",
+      "id": "1745856888368",
       "slug": "the-arab-forum-for-governance-and-sustainable-development-under-the-patronage-of-igcc",
       "title": "The Arab Forum for Governance and Sustainable Development Under the Patronage of IGCC",
       "title_ar": "الملتقى العربي للحوكمة والتنمية المستدامة تحت رعاية IGCC",
@@ -200,12 +200,34 @@
       ],
       "image": [
         {
-          "url": "https://raw.githubusercontent.com/RamezHany/igcc-test4/main/images/the-arab-forum-for-governance-and-sustainable-development-under-the-patronage-of-igcc.png",
+          "url": "https://raw.githubusercontent.com/RamezHany/igcc-test4/main/public/images/the-arab-forum-for-governance-and-sustainable-development-under-the-patronage-of-igcc.png",
           "width": 800,
           "height": 600
         }
       ],
       "date": "2025-03-05"
+    },
+    {
+      "id": "1745863737212",
+      "slug": "jfjfjfjj-fhfggf",
+      "title": "jfjfjfjj-fhfggf",
+      "title_ar": "تجربة",
+      "shortDescription": "short test",
+      "shortDescription_ar": "تجربه قصيرة",
+      "description": [
+        "long test"
+      ],
+      "description_ar": [
+        "تجربه طويله"
+      ],
+      "image": [
+        {
+          "url": "https://raw.githubusercontent.com/RamezHany/igcc-test4/main/public/images/jfjfjfjj-fhfggf.jpg",
+          "width": 800,
+          "height": 600
+        }
+      ],
+      "date": "2025-04-28"
     }
   ]
 }
