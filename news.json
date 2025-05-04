@@ -252,6 +252,40 @@
         }
       ],
       "date": "2025-04-29"
+    },
+    {
+      "id": "1746393651348",
+      "slug": "why-corporate-governance-matters?-a-simple-guide-to-building-transparent-and-sustainable-businesses",
+      "title": "Why Corporate Governance Matters? A Simple Guide to Building Transparent and Sustainable Businesses",
+      "title_ar": "لماذا تُعد الحوكمة المؤسسية مهمة؟ دليل مبسط لبناء شركات شفافة ومستدامة",
+      "shortDescription": "the role of corporate governance in promoting transparency accountability and sustainability ensuring long-term institutional success across environmental social and economic dimensions",
+      "shortDescription_ar": "أهمية الحوكمة المؤسسية في تعزيز الشفافية والمساءلة ودورها المحوري في تحقيق الاستدامة البيئية والاجتماعية والاقتصادية وضمان استمرارية المؤسسات ونجاحها",
+      "description": [
+        "Corporate governance is the way a company is managed and supervised it helps ensure that everything runs properly it focuses on defining roles fairly treating everyone with respect and making honest and clear decisions good governance builds trust and strengthens a business in the long term",
+        "",
+        "Key principles of good governance include transparency by sharing clear and timely information about company performance both financial and non-financial accountability by clearly assigning responsibilities within the organization fairness by treating all stakeholders equally and responsiveness which means being ready to adapt and handle external challenges",
+        "",
+        "Corporate governance plays a big role in supporting sustainability in three areas environment society and economy it helps improve financial performance through smart leadership and planning that reduces risks and increases long-term growth it ensures companies follow environmental rules and respect labor rights which builds credibility companies that apply governance responsibly and openly earn strong reputations among customers investors and regulators in addition businesses that value governance attract sustainable investments as investors now prefer companies that care about the planet and people governance also opens communication with stakeholders helping companies make fair and inclusive decisions",
+        "",
+        "In a fast-changing world corporate governance is no longer optional it is essential it ensures compliance boosts performance and lays the foundation for a better future for all"
+      ],
+      "description_ar": [
+        "الحوكمة المؤسسية هي الطريقة التي تُدار وتُراقب بها الشركة حيث تساعد في التأكد من أن كل شيء يسير بشكل صحيح وتهتم بتحديد الأدوار داخل الشركة مع معاملة الجميع بعدالة واتخاذ قرارات واضحة وصادقة الحوكمة الجيدة تبني الثقة وتقوي الشركة على المدى الطويل",
+        "",
+        "من أهم مبادئ الحوكمة الجيدة الشفافية من خلال مشاركة معلومات واضحة وحديثة عن أداء الشركة سواء كان ماليًا أو غير مالي والمساءلة من خلال تحديد المسؤوليات بدقة داخل المؤسسة والعدالة التي تضمن معاملة جميع أصحاب المصلحة بإنصاف والاستجابة أي أن تكون الشركة مستعدة للتغيّرات وقادرة على التعامل مع التحديات",
+        "",
+        "تلعب الحوكمة المؤسسية دورًا كبيرًا في دعم الاستدامة على ثلاث مستويات وهي البيئة والمجتمع والاقتصاد فهي تساهم في تحسين الأداء المالي من خلال قيادة ذكية وتخطيط جيد يقلل من المخاطر ويزيد من فرص النمو كما تساعد الشركات على احترام القوانين البيئية وحقوق العاملين مما يعزز من مصداقيتها وتكسب الشركة التي تطبق الحوكمة بثقة وشفافية سمعة قوية لدى العملاء والمستثمرين والجهات الرقابية بالإضافة إلى ذلك فإن الشركات التي تهتم بالحوكمة تجذب الاستثمارات المستدامة لأن المستثمرين أصبحوا يبحثون عن شركات تهتم بالبيئة والمجتمع وأخيرًا تفتح الحوكمة قنوات تواصل بين الشركة وأصحاب المصلحة مما يساهم في اتخاذ قرارات عادلة وشاملة للجميع",
+        "",
+        "في عالم يشهد تغيرات سريعة أصبحت الحوكمة المؤسسية ضرورة لا غنى عنها فهي لا تضمن فقط الامتثال وتحسين الأداء بل تضع أيضًا الأساس لبناء مستقبل أفضل يخدم الجميع"
+      ],
+      "image": [
+        {
+          "url": "https://raw.githubusercontent.com/RamezHany/igcc-test4/main/public/images/why-corporate-governance-matters?-a-simple-guide-to-building-transparent-and-sustainable-businesses.jpeg",
+          "width": 800,
+          "height": 600
+        }
+      ],
+      "date": "2025-05-04"
     }
   ]
 }
