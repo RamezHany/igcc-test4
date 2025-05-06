@@ -307,8 +307,24 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
 
 // جلب المسارات الثابتة - نستخدم fallback: true ليدعم كل السلجز المحتملة
 export const getStaticPaths: GetStaticPaths = async () => {
+    // تعريف بعض المسارات الشائعة مسبقًا
+    const commonPaths = [
+        'takkween-advanced-industries-group-grc-2024',
+        'international-center-delivers-certified-compliance-officer-program-to-madayn-group-in-oman',
+        'the-inaugural-international-conference-on-community-diplomacy-pioneers,-with-igcc-as-a-bronze-sponsor',
+        'the-arab-forum-for-governance-and-sustainable-development-under-the-patronage-of-igcc',
+        'governance-risk-and-compliance-grc-building-strong-and-sustainable-organizations',
+        'ppppo'
+    ];
+    
+    // إنشاء مسارات لكل لغة
+    const paths = [
+        ...commonPaths.map(slug => ({ params: { slug }, locale: 'en' })),
+        ...commonPaths.map(slug => ({ params: { slug }, locale: 'ar' }))
+    ];
+    
     return {
-        paths: [], // لا نقوم ببناء أي صفحات مسبقًا
+        paths,
         fallback: true // استخدام fallback: true للسماح ببناء الصفحات عند الطلب
     };
 };

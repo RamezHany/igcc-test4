@@ -7,32 +7,54 @@ interface NewsApiResponse {
   success: boolean;
   data?: News;
   error?: string;
+  message?: string;
 }
 
 // Set timeout for API operations
 const API_TIMEOUT = 8000; // 8 seconds
 
+// Memory cache for API responses
+const API_CACHE: Record<string, { data: NewsApiResponse, timestamp: number }> = {};
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<NewsApiResponse>
 ) {
-  // Start timeout timer
-  const timeoutPromise = new Promise<void>((_, reject) => {
-    setTimeout(() => reject(new Error('API Timeout')), API_TIMEOUT);
-  });
+  // Only allow GET requests
+  if (req.method !== 'GET') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
+  }
 
   try {
-    // Only allow GET requests
-    if (req.method !== 'GET') {
-      return res.status(405).json({ success: false, error: 'Method not allowed' });
-    }
-
-    // Get slug from the URL
-    const { slug } = req.query;
+    // Get slug from the URL and clean it
+    let { slug } = req.query;
     
     if (!slug || Array.isArray(slug)) {
       return res.status(400).json({ success: false, error: 'Invalid slug parameter' });
     }
+
+    // Remove any .json extension from the slug if present
+    slug = slug.replace(/\.json$/, '');
+    
+    // Get locale from query parameters (default to English if not provided)
+    const locale = req.query.locale as string || 'en';
+    
+    // Create a cache key based on slug and locale
+    const cacheKey = `${slug}_${locale}`;
+    
+    // Check if we have a cached response
+    const cachedResponse = API_CACHE[cacheKey];
+    if (cachedResponse && (Date.now() - cachedResponse.timestamp) < CACHE_DURATION) {
+      // Return cached response
+      console.log(`Using cached API response for ${cacheKey}`);
+      return res.status(200).json(cachedResponse.data);
+    }
+
+    // Start timeout timer
+    const timeoutPromise = new Promise<void>((_, reject) => {
+      setTimeout(() => reject(new Error('API Timeout')), API_TIMEOUT);
+    });
 
     // Race between the actual fetch and the timeout
     const fetchPromise = (async () => {
@@ -41,16 +63,33 @@ export default async function handler(
       
       // If no matching news item is found, return 404
       if (!newsItem) {
-        return res.status(404).json({ success: false, error: 'News item not found' });
+        const response: NewsApiResponse = { 
+          success: false, 
+          error: 'News item not found',
+          message: `No article found with slug: ${slug}`
+        };
+        
+        // Cache the 404 response too to avoid repeated lookups
+        API_CACHE[cacheKey] = {
+          data: response,
+          timestamp: Date.now()
+        };
+        
+        return res.status(404).json(response);
       }
-      
-      // Get locale from query parameters (default to English if not provided)
-      const locale = req.query.locale as string || 'en';
       
       // Process news item based on locale
       const processedNewsItem = processNewsItemByLocale(newsItem, locale);
+      
+      const response: NewsApiResponse = { success: true, data: processedNewsItem };
+      
+      // Cache the successful response
+      API_CACHE[cacheKey] = {
+        data: response,
+        timestamp: Date.now()
+      };
 
-      return res.status(200).json({ success: true, data: processedNewsItem });
+      return res.status(200).json(response);
     })();
 
     // Wait for either fetch completion or timeout
@@ -69,7 +108,8 @@ export default async function handler(
     
     return res.status(500).json({ 
       success: false, 
-      error: 'Failed to fetch news data' 
+      error: 'Failed to fetch news data',
+      message: error.message
     });
   }
 } 

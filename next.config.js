@@ -22,6 +22,27 @@ const nextConfig = {
       },
     ]
   },
+  // Add redirects for handling .json extensions
+  async redirects() {
+    return [
+      // Redirect any path ending with .json in news to the clean version
+      {
+        source: '/news/:slug.json',
+        destination: '/news/:slug',
+        permanent: true,
+      },
+      {
+        source: '/ar/news/:slug.json',
+        destination: '/ar/news/:slug',
+        permanent: true,
+      },
+      {
+        source: '/en/news/:slug.json',
+        destination: '/en/news/:slug',
+        permanent: true,
+      },
+    ]
+  },
   // Optimize static generation
   staticPageGenerationTimeout: 120, // Increase timeout to 120 seconds
   // Configure Incremental Static Regeneration (ISR) defaults
