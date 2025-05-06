@@ -78,25 +78,75 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug }) => {
             // تنظيف السلج من أي امتداد .json
             const cleanSlug = slug.replace(/\.json$/, '');
             
-            // جلب البيانات من API
-            const baseUrl = window.location.origin;
-            
-            // استخدام fetch بدون timeout - نعتمد على عرض رسالة تحميل للمستخدم
+            // جلب البيانات بشكل مباشر من الجيثب
             try {
                 console.log(`Fetching article: ${cleanSlug}`);
-                const response = await fetch(`${baseUrl}/api/news/${cleanSlug}?locale=${currentLocale}`);
                 
-                if (!response.ok) {
-                    throw new Error(`${response.status}: ${response.statusText}`);
+                // محاولة 1: استخدام API المحسن
+                const baseUrl = window.location.origin;
+                try {
+                    console.log(`Attempt 1: Using API at ${baseUrl}/api/news/${cleanSlug}`);
+                    const response = await fetch(`${baseUrl}/api/news/${cleanSlug}?locale=${currentLocale}&refresh=true`, {
+                        method: 'GET',
+                        headers: {
+                            'Cache-Control': 'no-cache'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.data) {
+                            setNewsItem(data.data);
+                            return;
+                        }
+                    }
+                    
+                    // إذا وصلنا إلى هنا، فإن API لم ينجح - نجرب الخطة البديلة
+                    console.log('API fetch failed, trying direct data fetch');
+                } catch (apiError) {
+                    console.warn('API error, trying fallback method:', apiError);
                 }
                 
-                const data = await response.json();
+                // محاولة 2: جلب البيانات مباشرة من GitHub
+                console.log(`Attempt 2: Fetching all news from GitHub and filtering by slug`);
                 
-                if (data.success && data.data) {
-                    setNewsItem(data.data);
-                } else {
-                    throw new Error(data.message || "No data found");
+                // جلب كل البيانات من GitHub مباشرة
+                const githubUrl = `https://raw.githubusercontent.com/RamezHany/igcc-test4/main/news.json`;
+                const githubResponse = await fetch(githubUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+                
+                if (!githubResponse.ok) {
+                    throw new Error(`GitHub responded with ${githubResponse.status}`);
                 }
+                
+                const allData = await githubResponse.json();
+                
+                if (!allData || !allData.news || !Array.isArray(allData.news)) {
+                    throw new Error('Invalid format of news data from GitHub');
+                }
+                
+                // البحث عن المقال حسب الـ slug
+                const article = allData.news.find(item => item.slug === cleanSlug);
+                
+                if (!article) {
+                    throw new Error(`Article with slug "${cleanSlug}" not found in news data`);
+                }
+                
+                // معالجة البيانات حسب اللغة
+                const processedArticle = currentLocale === 'ar' ? {
+                    ...article,
+                    title: article.title_ar || article.title,
+                    shortDescription: article.shortDescription_ar || article.shortDescription,
+                    description: article.description_ar || article.description
+                } : article;
+                
+                // تعيين البيانات
+                setNewsItem(processedArticle);
+                
             } catch (fetchErr: any) {
                 console.error('Error fetching news:', fetchErr);
                 throw fetchErr;
