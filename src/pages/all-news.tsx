@@ -44,15 +44,51 @@ const AllNews: FC = () => {
     const [filteredNews, setFilteredNews] = useState<News[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(false); // State for loader
+    const [loadingData, setLoadingData] = useState(true); // State for initial data loading
 
     useEffect(() => {
-        const loadNews = async () => {
-            await loadNewsData(locale || 'en'); // Fetch data based on the current locale
-            setNews(dataNews);
-            setFilteredNews(dataNews);
+        const fetchNewsFromApi = async () => {
+            try {
+                setLoadingData(true);
+                
+                // تجربة استخدام API أولاً
+                try {
+                    // Get the base URL for the API
+                    const protocol = window.location.protocol;
+                    const host = window.location.host;
+                    const baseUrl = `${protocol}//${host}`;
+                    
+                    // Call our API endpoint to get all news
+                    const response = await fetch(`${baseUrl}/api/news?locale=${locale || 'en'}`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data.success && data.data) {
+                            setNews(data.data);
+                            setFilteredNews(data.data);
+                            console.log(`Loaded ${data.data.length} news items from API`);
+                            return; // نجحنا في استخدام API
+                        }
+                    }
+                    
+                    // إذا وصلنا إلى هنا، فإن API لم يعمل
+                    throw new Error('API failed, falling back to direct load');
+                } catch (apiError) {
+                    console.warn('Error using API, falling back to direct load:', apiError);
+                    // استخدام loadNewsData كاحتياطي
+                    await loadNewsData(locale || 'en');
+                    setNews(dataNews);
+                    setFilteredNews(dataNews);
+                }
+            } catch (error) {
+                console.error('Failed to load news:', error);
+            } finally {
+                setLoadingData(false);
+            }
         };
 
-        loadNews();
+        fetchNewsFromApi();
     }, [locale]);
 
     // Filter news based on search term
@@ -74,16 +110,24 @@ const AllNews: FC = () => {
     const handleReadMoreClick = (slug: string) => {
         setLoading(true); // Show loader
 
-        // Navigate to the news detail page
-        router.push(`/news/${slug}`, undefined, { locale: locale })
-            .then(() => {
-                // Hide loader after navigation completes or in 500ms, whichever comes first
-                setTimeout(() => setLoading(false), 500);
-            })
-            .catch((error) => {
-                console.error('Navigation error:', error);
-                setLoading(false);
-            });
+        // استخدام router.push للانتقال إلى صفحة المقال مع الحفاظ على الإعدادات اللغوية
+        // وإرسال إشارة أنه سيتم استخدام API للحصول على بيانات المقال
+        router.push(
+            {
+                pathname: `/news/${slug}`,
+                query: { fromApi: 'true' } // إضافة معلمة للإشارة إلى استخدام API
+            },
+            `/news/${slug}`, // المسار الظاهري للمستخدم (بدون معلمات query)
+            { locale: locale }
+        )
+        .then(() => {
+            // إخفاء المؤشر بعد الانتقال أو بعد 500 مللي ثانية (أيهما أسبق)
+            setTimeout(() => setLoading(false), 500);
+        })
+        .catch((error) => {
+            console.error('Navigation error:', error);
+            setLoading(false);
+        });
     };
 
     // Handle search input change
@@ -156,7 +200,17 @@ const AllNews: FC = () => {
                             )}
                         </Box>
 
-                        {/* Loader */}
+                        {/* Initial Data Loading */}
+                        {loadingData && (
+                            <Box sx={{ textAlign: 'center', py: 8 }}>
+                                <CircularProgress color="primary" size={40} sx={{ mb: 2 }} />
+                                <Typography variant="h6" color="text.secondary">
+                                    {locale === 'ar' ? 'جاري تحميل الأخبار...' : 'Loading news...'}
+                                </Typography>
+                            </Box>
+                        )}
+
+                        {/* Loader for navigation */}
                         {loading && (
                             <Box
                                 sx={{
@@ -177,7 +231,7 @@ const AllNews: FC = () => {
                         )}
 
                         {/* No results message */}
-                        {filteredNews.length === 0 && (
+                        {!loadingData && filteredNews.length === 0 && (
                             <Box sx={{ textAlign: 'center', py: 8 }}>
                                 <Typography variant="h5" color="text.secondary">
                                     {locale === 'ar' ? 'لا توجد نتائج مطابقة لبحثك' : 'No results matching your search'}
@@ -185,108 +239,110 @@ const AllNews: FC = () => {
                             </Box>
                         )}
 
-                        <Grid container spacing={4}>
-                            {filteredNews.map((item) => (
-                                <Grid item xs={12} sm={6} md={4} lg={4} key={item.id}>
-                                    <Link href={`/news/${item.slug}`} passHref locale={locale}>
-                                        <MuiLink
-                                            component="a"
-                                            underline="none"
-                                            sx={{
-                                                display: 'block',
-                                                cursor: 'pointer',
-                                                height: '100%',
-                                            }}
-                                            onClick={(e: { preventDefault: () => void; }) => {
-                                                e.preventDefault(); // Prevent default link behavior
-                                                handleReadMoreClick(item.slug); // Handle click with loader
-                                            }}
-                                        >
-                                            <StyledPaper>
-                                                {/* Image */}
-                                                <Box
-                                                    sx={{
-                                                        borderRadius: 2,
-                                                        overflow: 'hidden',
-                                                        mb: 3,
-                                                    }}
-                                                >
-                                                    <Image
-                                                        src={item.image[0].url}
-                                                        alt={item.title}
-                                                        width={400}
-                                                        height={300}
-                                                        priority={parseInt(item.id) <= 3}
-                                                        style={{
-                                                            objectFit: 'cover',
-                                                            width: '100%',
-                                                            height: '100%',
+                        {!loadingData && (
+                            <Grid container spacing={4}>
+                                {filteredNews.map((item) => (
+                                    <Grid item xs={12} sm={6} md={4} lg={4} key={item.id}>
+                                        <Link href={`/news/${item.slug}`} passHref locale={locale}>
+                                            <MuiLink
+                                                component="a"
+                                                underline="none"
+                                                sx={{
+                                                    display: 'block',
+                                                    cursor: 'pointer',
+                                                    height: '100%',
+                                                }}
+                                                onClick={(e: { preventDefault: () => void; }) => {
+                                                    e.preventDefault(); // Prevent default link behavior
+                                                    handleReadMoreClick(item.slug); // Handle click with loader
+                                                }}
+                                            >
+                                                <StyledPaper>
+                                                    {/* Image */}
+                                                    <Box
+                                                        sx={{
+                                                            borderRadius: 2,
+                                                            overflow: 'hidden',
+                                                            mb: 3,
                                                         }}
-                                                    />
-                                                </Box>
+                                                    >
+                                                        <Image
+                                                            src={item.image[0].url}
+                                                            alt={item.title}
+                                                            width={400}
+                                                            height={300}
+                                                            priority={parseInt(item.id) <= 3}
+                                                            style={{
+                                                                objectFit: 'cover',
+                                                                width: '100%',
+                                                                height: '100%',
+                                                            }}
+                                                        />
+                                                    </Box>
 
-                                                {/* Title */}
-                                                <Typography
-                                                    variant="h6"
-                                                    sx={{
-                                                        mb: 1,
-                                                        color: 'text.primary',
-                                                        fontWeight: 'bold',
-                                                        minHeight: 56,
-                                                        display: '-webkit-box',
-                                                        WebkitLineClamp: 2,
-                                                        WebkitBoxOrient: 'vertical',
-                                                        overflow: 'hidden',
-                                                        textOverflow: 'ellipsis',
-                                                    }}
-                                                >
-                                                    {item.title}
-                                                </Typography>
+                                                    {/* Title */}
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{
+                                                            mb: 1,
+                                                            color: 'text.primary',
+                                                            fontWeight: 'bold',
+                                                            minHeight: 56,
+                                                            display: '-webkit-box',
+                                                            WebkitLineClamp: 2,
+                                                            WebkitBoxOrient: 'vertical',
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                        }}
+                                                    >
+                                                        {item.title}
+                                                    </Typography>
 
-                                                {/* Date */}
-                                                <Typography
-                                                    variant="body2"
-                                                    color="text.secondary"
-                                                    sx={{ mb: 2 }}
-                                                >
-                                                    {format(new Date(item.date), 'dd/MM/yyyy')}
-                                                </Typography>
+                                                    {/* Date */}
+                                                    <Typography
+                                                        variant="body2"
+                                                        color="text.secondary"
+                                                        sx={{ mb: 2 }}
+                                                    >
+                                                        {format(new Date(item.date), 'dd/MM/yyyy')}
+                                                    </Typography>
 
-                                                {/* Description */}
-                                                <Typography
-                                                    variant="body1"
-                                                    color="text.secondary"
-                                                    sx={{
-                                                        display: '-webkit-box',
-                                                        WebkitLineClamp: 3,
-                                                        WebkitBoxOrient: 'vertical',
-                                                        overflow: 'hidden',
-                                                        textOverflow: 'ellipsis',
-                                                        mb: 2,
-                                                        flexGrow: 1, // Allow description to take remaining space
-                                                    }}
-                                                >
-                                                    {item.description[0]}
-                                                </Typography>
+                                                    {/* Description */}
+                                                    <Typography
+                                                        variant="body1"
+                                                        color="text.secondary"
+                                                        sx={{
+                                                            display: '-webkit-box',
+                                                            WebkitLineClamp: 3,
+                                                            WebkitBoxOrient: 'vertical',
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                            mb: 2,
+                                                            flexGrow: 1, // Allow description to take remaining space
+                                                        }}
+                                                    >
+                                                        {item.description[0]}
+                                                    </Typography>
 
-                                                {/* Read More */}
-                                                <Typography
-                                                    color="primary"
-                                                    sx={{
-                                                        fontWeight: 'medium',
-                                                        '&:hover': {
-                                                            textDecoration: 'underline',
-                                                        },
-                                                    }}
-                                                >
-                                                    {t('buttons.readMore', 'اقرأ المزيد')}
-                                                </Typography>
-                                            </StyledPaper>
-                                        </MuiLink>
-                                    </Link>
-                                </Grid>
-                            ))}
-                        </Grid>
+                                                    {/* Read More */}
+                                                    <Typography
+                                                        color="primary"
+                                                        sx={{
+                                                            fontWeight: 'medium',
+                                                            '&:hover': {
+                                                                textDecoration: 'underline',
+                                                            },
+                                                        }}
+                                                    >
+                                                        {t('buttons.readMore', 'اقرأ المزيد')}
+                                                    </Typography>
+                                                </StyledPaper>
+                                            </MuiLink>
+                                        </Link>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        )}
                     </Container>
                 </Box>
             </Box>

@@ -15,6 +15,7 @@ import { GetStaticProps, GetStaticPaths } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import type { News } from '@/interfaces/News';
 import { fetchNewsFromGitHub, fetchNewsBySlug, processNewsItemByLocale } from '@/utils/githubApi';
+import CircularProgress from '@mui/material/CircularProgress';
 
 // Styled Paper for the News Detail Container
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -29,23 +30,98 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 }));
 
 interface NewsDetailProps {
-    newsItem: News;
+    newsItem?: News;
+    isFromApi?: boolean;
 }
 
-const NewsDetail: FC<NewsDetailProps> = ({ newsItem }) => {
+const NewsDetail: FC<NewsDetailProps> = ({ newsItem: initialNewsItem, isFromApi }) => {
     const router = useRouter();
     const { t } = useTranslation('common');
+    const [newsItem, setNewsItem] = useState<News | null>(initialNewsItem || null);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
     
-    // If the page is still generating static content, show a loading state
-    if (router.isFallback) {
+    // Fetch news item from API when slug changes or on initial load
+    useEffect(() => {
+        const fetchNewsFromApi = async () => {
+            // تحقق مما إذا كنا بحاجة إلى تحميل البيانات من API
+            // سيتم التحميل في حالتين:
+            // 1. إذا كانت isFromApi=true في props (من getStaticProps)
+            // 2. إذا كانت معلمة fromApi=true في URL (من الصفحات الأخرى)
+            const shouldFetchFromApi = isFromApi || router.query.fromApi === 'true';
+            
+            // إذا كان لدينا بالفعل عنصر الأخبار من SSG/SSR ولا نحتاج إلى التحميل من API، فتخطي
+            if ((initialNewsItem && !shouldFetchFromApi) || loading) return;
+            
+            const { slug, locale } = router.query;
+            if (!slug) return;
+            
+            try {
+                setLoading(true);
+                setError(null);
+                
+                // Get the base URL for the API
+                const protocol = window.location.protocol;
+                const host = window.location.host;
+                const baseUrl = `${protocol}//${host}`;
+                
+                // Call our API endpoint to get news by slug
+                const response = await fetch(
+                    `${baseUrl}/api/news/${slug}?locale=${locale || 'en'}`
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch news: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (!result.success || !result.data) {
+                    throw new Error('Invalid API response format');
+                }
+                
+                setNewsItem(result.data);
+            } catch (err) {
+                console.error('Error fetching news item from API:', err);
+                setError(t('news.fetchError', 'حدث خطأ أثناء تحميل الخبر'));
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        fetchNewsFromApi();
+    }, [router.query.slug, router.query.locale, router.query.fromApi, initialNewsItem, isFromApi, loading, t]);
+    
+    // If the page is still generating static content or loading from API, show a loading state
+    if (router.isFallback || loading) {
         return (
             <MainLayout>
                 <Container>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        justifyContent: 'center', 
+                        alignItems: 'center', 
+                        height: '50vh' 
+                    }}>
+                        <CircularProgress color="primary" size={60} sx={{ mb: 2 }} />
                         <Typography variant="h4">
-                            {t('loading', 'Loading...')}
+                            {t('loading', 'جاري التحميل...')}
                         </Typography>
                     </Box>
+                </Container>
+            </MainLayout>
+        );
+    }
+
+    // If error occurred during API fetch
+    if (error) {
+        return (
+            <MainLayout>
+                <Container>
+                    <Typography variant="h4" align="center" sx={{ my: 8, color: 'error.main' }}>
+                        {error}
+                    </Typography>
                 </Container>
             </MainLayout>
         );
@@ -216,14 +292,21 @@ export const getStaticProps: GetStaticProps = async ({ params, locale }) => {
             props: {
                 ...(await serverSideTranslations(locale ?? 'en', ['common'])),
                 newsItem: processedNewsItem,
+                isFromApi: false,
             },
             // Revalidate every hour (3600 seconds)
             revalidate: 3600,
         };
     } catch (error) {
         console.error('Error fetching news item:', error);
+        // Instead of 404, return minimal props and let client-side fetching happen
         return {
-            notFound: true,
+            props: {
+                ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+                isFromApi: true,
+            },
+            // Revalidate more frequently (15 minutes) in case of errors
+            revalidate: 900,
         };
     }
 };

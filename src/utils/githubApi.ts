@@ -30,8 +30,8 @@ export async function fetchNewsFromGitHub(): Promise<News[]> {
     
     console.log('Fetching fresh news data from GitHub');
     
-    // Construct the raw content URL
-    const githubRawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/${GITHUB_BRANCH}/${NEWS_FILE_PATH}`;
+    // Construct the raw content URL with fallback
+    const githubRawUrl = getGithubRawUrl();
     
     // Fetch the news JSON file
     const response = await fetch(githubRawUrl, {
@@ -58,6 +58,14 @@ export async function fetchNewsFromGitHub(): Promise<News[]> {
     console.error('Error fetching news from GitHub:', error);
     throw error;
   }
+}
+
+/**
+ * Gets the GitHub raw URL for the news.json file
+ * Ensures it works in both browser and Node.js environments
+ */
+function getGithubRawUrl(): string {
+  return `https://raw.githubusercontent.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/${GITHUB_BRANCH}/${NEWS_FILE_PATH}`;
 }
 
 /**
