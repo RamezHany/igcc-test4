@@ -389,26 +389,66 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug }) => {
 
 // تعريف المسارات الشائعة مسبقًا
 export const getStaticPaths: GetStaticPaths = async () => {
-    // تعريف بعض المسارات الشائعة مسبقًا
-    const commonPaths = [
-        'takkween-advanced-industries-group-grc-2024',
-        'international-center-delivers-certified-compliance-officer-program-to-madayn-group-in-oman',
-        'the-inaugural-international-conference-on-community-diplomacy-pioneers,-with-igcc-as-a-bronze-sponsor',
-        'the-arab-forum-for-governance-and-sustainable-development-under-the-patronage-of-igcc',
-        'governance-risk-and-compliance-grc-building-strong-and-sustainable-organizations',
-        'ppppo'
-    ];
-    
-    // إنشاء مسارات لكل لغة
-    const paths = [
-        ...commonPaths.map(slug => ({ params: { slug }, locale: 'en' })),
-        ...commonPaths.map(slug => ({ params: { slug }, locale: 'ar' }))
-    ];
-    
-    return {
-        paths,
-        fallback: true // استخدام fallback: true للسماح ببناء الصفحات عند الطلب
-    };
+    try {
+        // محاولة جلب كل المقالات من GitHub
+        const githubUrl = `https://raw.githubusercontent.com/RamezHany/igcc-test4/main/news.json`;
+        const response = await fetch(githubUrl, {
+            method: 'GET',
+            headers: {
+                'Cache-Control': 'no-cache'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`GitHub API responded with ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data || !data.news || !Array.isArray(data.news)) {
+            throw new Error('Invalid format of news data from GitHub');
+        }
+        
+        // استخراج جميع الـ slugs من البيانات
+        const allSlugs = data.news.map(item => item.slug);
+        
+        console.log(`Found ${allSlugs.length} articles to pre-generate:`, allSlugs);
+        
+        // إنشاء مسارات لكل لغة
+        const paths = [
+            ...allSlugs.map(slug => ({ params: { slug }, locale: 'en' })),
+            ...allSlugs.map(slug => ({ params: { slug }, locale: 'ar' }))
+        ];
+        
+        return {
+            paths,
+            fallback: true // استخدام fallback: true للسماح ببناء الصفحات عند الطلب
+        };
+    } catch (error) {
+        console.error('Error fetching paths:', error);
+        
+        // في حالة فشل الجلب، استخدم قائمة أساسية
+        const commonPaths = [
+            'takkween-advanced-industries-group-grc-2024',
+            'international-center-delivers-certified-compliance-officer-program-to-madayn-group-in-oman',
+            'the-inaugural-international-conference-on-community-diplomacy-pioneers,-with-igcc-as-a-bronze-sponsor',
+            'the-arab-forum-for-governance-and-sustainable-development-under-the-patronage-of-igcc',
+            'governance-risk-and-compliance-grc-building-strong-and-sustainable-organizations',
+            'ppppo',
+            'gggg'
+        ];
+        
+        // إنشاء مسارات لكل لغة
+        const paths = [
+            ...commonPaths.map(slug => ({ params: { slug }, locale: 'en' })),
+            ...commonPaths.map(slug => ({ params: { slug }, locale: 'ar' }))
+        ];
+        
+        return {
+            paths,
+            fallback: true // استخدام fallback: true للسماح ببناء الصفحات عند الطلب
+        };
+    }
 };
 
 // استخدم getStaticProps بدون اتصال بـ API لتجنب timeout
