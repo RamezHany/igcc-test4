@@ -294,58 +294,76 @@ export const getStaticProps: GetStaticProps = async ({ params, locale }) => {
         
         const slug = params.slug.toString();
         
-        // Use a timeout to prevent long running operations
-        const timeoutPromise = new Promise<{ notFound: boolean }>((_, reject) => {
-            setTimeout(() => reject(new Error('Fetch timeout')), 5000);
-        });
-        
-        // Race between the actual fetch and the timeout
-        const result = await Promise.race([
-            (async () => {
-                // Use our utility function to get the news item by slug
-                const newsItem = await fetchNewsBySlug(slug);
-                
-                // If no matching news item is found, return 404
-                if (!newsItem) {
-                    return { notFound: true };
-                }
-                
-                // Process the news item based on locale
-                const processedNewsItem = processNewsItemByLocale(newsItem, locale?.toString() || 'en');
-                
-                return {
-                    props: {
-                        ...(await serverSideTranslations(locale ?? 'en', ['common'])),
-                        newsItem: processedNewsItem,
-                        isFromApi: false,
-                    },
-                    // Revalidate every hour (3600 seconds)
-                    revalidate: 3600,
-                };
-            })(),
-            timeoutPromise
-        ]).catch(() => {
-            // If timeout or error, return minimal props and let client-side handle it
+        try {
+            // Set a timeout for the fetch operation
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            
+            // Use our utility function to get the news item by slug with the timeout
+            const newsItem = await fetchNewsBySlug(slug);
+            
+            // Clear the timeout as fetch completed
+            clearTimeout(timeoutId);
+            
+            // If no matching news item is found, return 404
+            if (!newsItem) {
+                return { notFound: true };
+            }
+            
+            // Process the news item based on locale
+            const processedNewsItem = processNewsItemByLocale(newsItem, locale?.toString() || 'en');
+            
+            // Get translations
+            const translations = await serverSideTranslations(locale ?? 'en', ['common']);
+            
             return {
                 props: {
-                    ...({}), // Empty placeholder for serverSideTranslations
+                    ...translations,
+                    newsItem: processedNewsItem,
+                    isFromApi: false,
+                },
+                // Revalidate every hour (3600 seconds)
+                revalidate: 3600,
+            };
+        } catch (fetchError) {
+            console.error('Fetch error in getStaticProps:', fetchError);
+            
+            // Get translations even in error case
+            const translations = await serverSideTranslations(locale ?? 'en', ['common']);
+            
+            // If timeout or any other error, return minimal props and let client-side handle it
+            return {
+                props: {
+                    ...translations,
                     isFromApi: true,
                 },
                 revalidate: 60,
             };
-        });
-        
-        return result;
+        }
     } catch (error) {
-        console.error('Error fetching news item:', error);
-        // Instead of 404, return minimal props and let client-side fetching happen
-        return {
-            props: {
-                isFromApi: true,
-            },
-            // Revalidate more frequently in case of errors
-            revalidate: 60,
-        };
+        console.error('Error in getStaticProps:', error);
+        
+        try {
+            // Try to get translations
+            const translations = await serverSideTranslations(locale ?? 'en', ['common']);
+            
+            // Return minimal props with translations
+            return {
+                props: {
+                    ...translations,
+                    isFromApi: true,
+                },
+                revalidate: 60,
+            };
+        } catch (translationError) {
+            // As a last resort, return minimal props without translations
+            return {
+                props: {
+                    isFromApi: true,
+                },
+                revalidate: 60,
+            };
+        }
     }
 };
 
