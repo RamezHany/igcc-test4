@@ -41,6 +41,28 @@ const NewsDetail: FC<NewsDetailProps> = ({ newsItem: initialNewsItem, isFromApi 
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     
+    // Handle fallback rendering
+    if (router.isFallback) {
+        return (
+            <MainLayout>
+                <Container>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        justifyContent: 'center', 
+                        alignItems: 'center', 
+                        height: '50vh' 
+                    }}>
+                        <CircularProgress color="primary" size={60} sx={{ mb: 2 }} />
+                        <Typography variant="h4">
+                            جاري التحميل...
+                        </Typography>
+                    </Box>
+                </Container>
+            </MainLayout>
+        );
+    }
+    
     // Fetch news item from API when slug changes or on initial load
     useEffect(() => {
         const fetchNewsFromApi = async () => {
@@ -51,7 +73,7 @@ const NewsDetail: FC<NewsDetailProps> = ({ newsItem: initialNewsItem, isFromApi 
             const shouldFetchFromApi = isFromApi || router.query.fromApi === 'true';
             
             // إذا كان لدينا بالفعل عنصر الأخبار من SSG/SSR ولا نحتاج إلى التحميل من API، فتخطي
-            if ((initialNewsItem && !shouldFetchFromApi) || loading) return;
+            if ((initialNewsItem && !shouldFetchFromApi) || loading || !router.isReady) return;
             
             const { slug, locale } = router.query;
             if (!slug) return;
@@ -65,12 +87,23 @@ const NewsDetail: FC<NewsDetailProps> = ({ newsItem: initialNewsItem, isFromApi 
                 const host = window.location.host;
                 const baseUrl = `${protocol}//${host}`;
                 
+                // Add timeout to avoid client-side hanging
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                
                 // Call our API endpoint to get news by slug
                 const response = await fetch(
-                    `${baseUrl}/api/news/${slug}?locale=${locale || 'en'}`
+                    `${baseUrl}/api/news/${slug}?locale=${locale || 'en'}`,
+                    { signal: controller.signal }
                 );
                 
+                clearTimeout(timeoutId);
+                
                 if (!response.ok) {
+                    if (response.status === 404) {
+                        router.push('/404');
+                        return;
+                    }
                     throw new Error(`Failed to fetch news: ${response.status}`);
                 }
                 
@@ -81,38 +114,20 @@ const NewsDetail: FC<NewsDetailProps> = ({ newsItem: initialNewsItem, isFromApi 
                 }
                 
                 setNewsItem(result.data);
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Error fetching news item from API:', err);
-                setError(t('news.fetchError', 'حدث خطأ أثناء تحميل الخبر'));
+                if (err.name === 'AbortError') {
+                    setError('تجاوز الوقت المسموح لتحميل البيانات. يرجى المحاولة مرة أخرى.');
+                } else {
+                    setError('حدث خطأ أثناء تحميل الخبر');
+                }
             } finally {
                 setLoading(false);
             }
         };
         
         fetchNewsFromApi();
-    }, [router.query.slug, router.query.locale, router.query.fromApi, initialNewsItem, isFromApi, loading, t]);
-    
-    // If the page is still generating static content or loading from API, show a loading state
-    if (router.isFallback || loading) {
-        return (
-            <MainLayout>
-                <Container>
-                    <Box sx={{ 
-                        display: 'flex', 
-                        flexDirection: 'column',
-                        justifyContent: 'center', 
-                        alignItems: 'center', 
-                        height: '50vh' 
-                    }}>
-                        <CircularProgress color="primary" size={60} sx={{ mb: 2 }} />
-                        <Typography variant="h4">
-                            {t('loading', 'جاري التحميل...')}
-                        </Typography>
-                    </Box>
-                </Container>
-            </MainLayout>
-        );
-    }
+    }, [router.query.slug, router.query.locale, router.query.fromApi, initialNewsItem, isFromApi, loading, router.isReady, t, router]);
 
     // If error occurred during API fetch
     if (error) {
@@ -259,14 +274,14 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
         return {
             paths,
-            fallback: 'blocking', // Use blocking to handle new slugs
+            fallback: true, // Change to true instead of blocking to avoid timeout
         };
     } catch (error) {
         console.error('Error generating static paths:', error);
-        // Fallback to empty paths with blocking
+        // Fallback to empty paths with fallback true to avoid timeout
         return {
             paths: [],
-            fallback: 'blocking',
+            fallback: true,
         };
     }
 };
@@ -277,36 +292,59 @@ export const getStaticProps: GetStaticProps = async ({ params, locale }) => {
             return { notFound: true };
         }
         
-        // Use our utility function to get the news item by slug
-        const newsItem = await fetchNewsBySlug(params.slug.toString());
+        const slug = params.slug.toString();
         
-        // If no matching news item is found, return 404
-        if (!newsItem) {
-            return { notFound: true };
-        }
+        // Use a timeout to prevent long running operations
+        const timeoutPromise = new Promise<{ notFound: boolean }>((_, reject) => {
+            setTimeout(() => reject(new Error('Fetch timeout')), 5000);
+        });
         
-        // Process the news item based on locale
-        const processedNewsItem = processNewsItemByLocale(newsItem, locale?.toString() || 'en');
+        // Race between the actual fetch and the timeout
+        const result = await Promise.race([
+            (async () => {
+                // Use our utility function to get the news item by slug
+                const newsItem = await fetchNewsBySlug(slug);
+                
+                // If no matching news item is found, return 404
+                if (!newsItem) {
+                    return { notFound: true };
+                }
+                
+                // Process the news item based on locale
+                const processedNewsItem = processNewsItemByLocale(newsItem, locale?.toString() || 'en');
+                
+                return {
+                    props: {
+                        ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+                        newsItem: processedNewsItem,
+                        isFromApi: false,
+                    },
+                    // Revalidate every hour (3600 seconds)
+                    revalidate: 3600,
+                };
+            })(),
+            timeoutPromise
+        ]).catch(() => {
+            // If timeout or error, return minimal props and let client-side handle it
+            return {
+                props: {
+                    ...({}), // Empty placeholder for serverSideTranslations
+                    isFromApi: true,
+                },
+                revalidate: 60,
+            };
+        });
         
-        return {
-            props: {
-                ...(await serverSideTranslations(locale ?? 'en', ['common'])),
-                newsItem: processedNewsItem,
-                isFromApi: false,
-            },
-            // Revalidate every hour (3600 seconds)
-            revalidate: 3600,
-        };
+        return result;
     } catch (error) {
         console.error('Error fetching news item:', error);
         // Instead of 404, return minimal props and let client-side fetching happen
         return {
             props: {
-                ...(await serverSideTranslations(locale ?? 'en', ['common'])),
                 isFromApi: true,
             },
-            // Revalidate more frequently (15 minutes) in case of errors
-            revalidate: 900,
+            // Revalidate more frequently in case of errors
+            revalidate: 60,
         };
     }
 };

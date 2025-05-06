@@ -78,8 +78,8 @@ const AllNews: FC = () => {
                     console.warn('Error using API, falling back to direct load:', apiError);
                     // استخدام loadNewsData كاحتياطي
                     await loadNewsData(locale || 'en');
-                    setNews(dataNews);
-                    setFilteredNews(dataNews);
+            setNews(dataNews);
+            setFilteredNews(dataNews);
                 }
             } catch (error) {
                 console.error('Failed to load news:', error);
@@ -240,108 +240,108 @@ const AllNews: FC = () => {
                         )}
 
                         {!loadingData && (
-                            <Grid container spacing={4}>
-                                {filteredNews.map((item) => (
-                                    <Grid item xs={12} sm={6} md={4} lg={4} key={item.id}>
-                                        <Link href={`/news/${item.slug}`} passHref locale={locale}>
-                                            <MuiLink
-                                                component="a"
-                                                underline="none"
-                                                sx={{
-                                                    display: 'block',
-                                                    cursor: 'pointer',
-                                                    height: '100%',
-                                                }}
-                                                onClick={(e: { preventDefault: () => void; }) => {
-                                                    e.preventDefault(); // Prevent default link behavior
-                                                    handleReadMoreClick(item.slug); // Handle click with loader
-                                                }}
-                                            >
-                                                <StyledPaper>
-                                                    {/* Image */}
-                                                    <Box
-                                                        sx={{
-                                                            borderRadius: 2,
-                                                            overflow: 'hidden',
-                                                            mb: 3,
+                        <Grid container spacing={4}>
+                            {filteredNews.map((item) => (
+                                <Grid item xs={12} sm={6} md={4} lg={4} key={item.id}>
+                                    <Link href={`/news/${item.slug}`} passHref locale={locale}>
+                                        <MuiLink
+                                            component="a"
+                                            underline="none"
+                                            sx={{
+                                                display: 'block',
+                                                cursor: 'pointer',
+                                                height: '100%',
+                                            }}
+                                            onClick={(e: { preventDefault: () => void; }) => {
+                                                e.preventDefault(); // Prevent default link behavior
+                                                handleReadMoreClick(item.slug); // Handle click with loader
+                                            }}
+                                        >
+                                            <StyledPaper>
+                                                {/* Image */}
+                                                <Box
+                                                    sx={{
+                                                        borderRadius: 2,
+                                                        overflow: 'hidden',
+                                                        mb: 3,
+                                                    }}
+                                                >
+                                                    <Image
+                                                        src={item.image[0].url}
+                                                        alt={item.title}
+                                                        width={400}
+                                                        height={300}
+                                                        priority={parseInt(item.id) <= 3}
+                                                        style={{
+                                                            objectFit: 'cover',
+                                                            width: '100%',
+                                                            height: '100%',
                                                         }}
-                                                    >
-                                                        <Image
-                                                            src={item.image[0].url}
-                                                            alt={item.title}
-                                                            width={400}
-                                                            height={300}
-                                                            priority={parseInt(item.id) <= 3}
-                                                            style={{
-                                                                objectFit: 'cover',
-                                                                width: '100%',
-                                                                height: '100%',
-                                                            }}
-                                                        />
-                                                    </Box>
+                                                    />
+                                                </Box>
 
-                                                    {/* Title */}
-                                                    <Typography
-                                                        variant="h6"
-                                                        sx={{
-                                                            mb: 1,
-                                                            color: 'text.primary',
-                                                            fontWeight: 'bold',
-                                                            minHeight: 56,
-                                                            display: '-webkit-box',
-                                                            WebkitLineClamp: 2,
-                                                            WebkitBoxOrient: 'vertical',
-                                                            overflow: 'hidden',
-                                                            textOverflow: 'ellipsis',
-                                                        }}
-                                                    >
-                                                        {item.title}
-                                                    </Typography>
+                                                {/* Title */}
+                                                <Typography
+                                                    variant="h6"
+                                                    sx={{
+                                                        mb: 1,
+                                                        color: 'text.primary',
+                                                        fontWeight: 'bold',
+                                                        minHeight: 56,
+                                                        display: '-webkit-box',
+                                                        WebkitLineClamp: 2,
+                                                        WebkitBoxOrient: 'vertical',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                    }}
+                                                >
+                                                    {item.title}
+                                                </Typography>
 
-                                                    {/* Date */}
-                                                    <Typography
-                                                        variant="body2"
-                                                        color="text.secondary"
-                                                        sx={{ mb: 2 }}
-                                                    >
-                                                        {format(new Date(item.date), 'dd/MM/yyyy')}
-                                                    </Typography>
+                                                {/* Date */}
+                                                <Typography
+                                                    variant="body2"
+                                                    color="text.secondary"
+                                                    sx={{ mb: 2 }}
+                                                >
+                                                    {format(new Date(item.date), 'dd/MM/yyyy')}
+                                                </Typography>
 
-                                                    {/* Description */}
-                                                    <Typography
-                                                        variant="body1"
-                                                        color="text.secondary"
-                                                        sx={{
-                                                            display: '-webkit-box',
-                                                            WebkitLineClamp: 3,
-                                                            WebkitBoxOrient: 'vertical',
-                                                            overflow: 'hidden',
-                                                            textOverflow: 'ellipsis',
-                                                            mb: 2,
-                                                            flexGrow: 1, // Allow description to take remaining space
-                                                        }}
-                                                    >
-                                                        {item.description[0]}
-                                                    </Typography>
+                                                {/* Description */}
+                                                <Typography
+                                                    variant="body1"
+                                                    color="text.secondary"
+                                                    sx={{
+                                                        display: '-webkit-box',
+                                                        WebkitLineClamp: 3,
+                                                        WebkitBoxOrient: 'vertical',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        mb: 2,
+                                                        flexGrow: 1, // Allow description to take remaining space
+                                                    }}
+                                                >
+                                                    {item.description[0]}
+                                                </Typography>
 
-                                                    {/* Read More */}
-                                                    <Typography
-                                                        color="primary"
-                                                        sx={{
-                                                            fontWeight: 'medium',
-                                                            '&:hover': {
-                                                                textDecoration: 'underline',
-                                                            },
-                                                        }}
-                                                    >
-                                                        {t('buttons.readMore', 'اقرأ المزيد')}
-                                                    </Typography>
-                                                </StyledPaper>
-                                            </MuiLink>
-                                        </Link>
-                                    </Grid>
-                                ))}
-                            </Grid>
+                                                {/* Read More */}
+                                                <Typography
+                                                    color="primary"
+                                                    sx={{
+                                                        fontWeight: 'medium',
+                                                        '&:hover': {
+                                                            textDecoration: 'underline',
+                                                        },
+                                                    }}
+                                                >
+                                                    {t('buttons.readMore', 'اقرأ المزيد')}
+                                                </Typography>
+                                            </StyledPaper>
+                                        </MuiLink>
+                                    </Link>
+                                </Grid>
+                            ))}
+                        </Grid>
                         )}
                     </Container>
                 </Box>

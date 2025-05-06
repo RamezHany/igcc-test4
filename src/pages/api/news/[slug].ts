@@ -9,10 +9,18 @@ interface NewsApiResponse {
   error?: string;
 }
 
+// Set timeout for API operations
+const API_TIMEOUT = 8000; // 8 seconds
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<NewsApiResponse>
 ) {
+  // Start timeout timer
+  const timeoutPromise = new Promise<void>((_, reject) => {
+    setTimeout(() => reject(new Error('API Timeout')), API_TIMEOUT);
+  });
+
   try {
     // Only allow GET requests
     if (req.method !== 'GET') {
@@ -26,23 +34,42 @@ export default async function handler(
       return res.status(400).json({ success: false, error: 'Invalid slug parameter' });
     }
 
-    // Fetch news item by slug
-    const newsItem = await fetchNewsBySlug(slug);
+    // Race between the actual fetch and the timeout
+    const fetchPromise = (async () => {
+      // Fetch news item by slug
+      const newsItem = await fetchNewsBySlug(slug);
+      
+      // If no matching news item is found, return 404
+      if (!newsItem) {
+        return res.status(404).json({ success: false, error: 'News item not found' });
+      }
+      
+      // Get locale from query parameters (default to English if not provided)
+      const locale = req.query.locale as string || 'en';
+      
+      // Process news item based on locale
+      const processedNewsItem = processNewsItemByLocale(newsItem, locale);
+
+      return res.status(200).json({ success: true, data: processedNewsItem });
+    })();
+
+    // Wait for either fetch completion or timeout
+    await Promise.race([fetchPromise, timeoutPromise]);
     
-    // If no matching news item is found, return 404
-    if (!newsItem) {
-      return res.status(404).json({ success: false, error: 'News item not found' });
+  } catch (error: any) {
+    console.error('API Error:', error);
+    
+    // Check if this was a timeout error
+    if (error.message === 'API Timeout') {
+      return res.status(503).json({ 
+        success: false, 
+        error: 'The request took too long to process. Please try again.' 
+      });
     }
     
-    // Get locale from query parameters (default to English if not provided)
-    const locale = req.query.locale as string || 'en';
-    
-    // Process news item based on locale
-    const processedNewsItem = processNewsItemByLocale(newsItem, locale);
-
-    return res.status(200).json({ success: true, data: processedNewsItem });
-  } catch (error) {
-    console.error('API Error:', error);
-    return res.status(500).json({ success: false, error: 'Failed to fetch news data' });
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch news data' 
+    });
   }
 } 

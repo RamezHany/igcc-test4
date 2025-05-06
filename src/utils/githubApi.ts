@@ -13,6 +13,9 @@ const CACHE_DURATION = 3600000; // 1 hour in milliseconds
 let cachedNewsData: News[] | null = null;
 let lastFetchTime = 0;
 
+// Simple in-memory cache for individual news items
+const newsItemCache: Record<string, {data: News, timestamp: number}> = {};
+
 /**
  * Fetches news data from the GitHub repository
  * @returns Promise resolving to an array of news items
@@ -33,12 +36,20 @@ export async function fetchNewsFromGitHub(): Promise<News[]> {
     // Construct the raw content URL with fallback
     const githubRawUrl = getGithubRawUrl();
     
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds timeout
+    
     // Fetch the news JSON file
     const response = await fetch(githubRawUrl, {
       headers: {
         'Cache-Control': 'no-cache'
-      }
+      },
+      signal: controller.signal
     });
+    
+    // Clear the timeout
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       throw new Error(`GitHub API responded with status: ${response.status}`);
@@ -54,8 +65,21 @@ export async function fetchNewsFromGitHub(): Promise<News[]> {
     lastFetchTime = now;
     
     return newsData;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching news from GitHub:', error);
+    
+    // If we have cached data, return it on timeout errors
+    if (error.name === 'AbortError' && cachedNewsData) {
+      console.warn('Fetch timeout - using cached data');
+      return cachedNewsData;
+    }
+    
+    // If nothing else works, return empty array instead of throwing
+    if (error.name === 'AbortError') {
+      console.warn('Fetch timeout - no cached data available');
+      return [];
+    }
+    
     throw error;
   }
 }
@@ -75,17 +99,75 @@ function getGithubRawUrl(): string {
  */
 export async function fetchNewsBySlug(slug: string): Promise<News | null> {
   try {
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 seconds timeout
+    
+    // Try first to get from specific cache mapping if available
+    const slugCacheKey = `news_${slug}`;
+    const cachedItem = getFromCache(slugCacheKey);
+    if (cachedItem) {
+      clearTimeout(timeoutId);
+      return cachedItem;
+    }
+    
     // Fetch all news items
     const newsItems = await fetchNewsFromGitHub();
     
     // Find the news item with the matching slug
     const newsItem = newsItems.find(item => item.slug === slug);
     
+    // Cache the result for future use if found
+    if (newsItem) {
+      saveToCache(slugCacheKey, newsItem);
+    }
+    
+    // Clear the timeout
+    clearTimeout(timeoutId);
+    
     return newsItem || null;
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Error fetching news item with slug ${slug}:`, error);
-    throw error;
+    
+    // If it's a timeout and we have cached data, try to get from cache
+    if (error.name === 'AbortError') {
+      console.warn(`Fetch timeout for slug ${slug} - trying cached news data`);
+      
+      const slugCacheKey = `news_${slug}`;
+      const cachedItem = getFromCache(slugCacheKey);
+      if (cachedItem) {
+        return cachedItem;
+      }
+      
+      // If we have cached news data, search through it
+      if (cachedNewsData && cachedNewsData.length > 0) {
+        return cachedNewsData.find(item => item.slug === slug) || null;
+      }
+    }
+    
+    return null; // Return null instead of throwing to prevent server crashes
   }
+}
+
+/**
+ * Get a cached news item if valid
+ */
+function getFromCache(key: string): News | null {
+  const cached = newsItemCache[key];
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  return null;
+}
+
+/**
+ * Save a news item to cache
+ */
+function saveToCache(key: string, data: News): void {
+  newsItemCache[key] = {
+    data,
+    timestamp: Date.now()
+  };
 }
 
 /**
