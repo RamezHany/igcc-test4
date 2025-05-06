@@ -17,7 +17,7 @@ import { GetStaticProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import type { News } from '@/interfaces/News';
 import CircularProgress from '@mui/material/CircularProgress'; // Import CircularProgress for the loader
-import { TextField, InputAdornment, Button } from '@mui/material'; // Import components for search
+import { TextField, InputAdornment, Button, Alert } from '@mui/material'; // Import components for search and Alert
 import SearchIcon from '@mui/icons-material/Search'; // Import search icon
 
 // Styled Paper for Cards
@@ -45,11 +45,13 @@ const AllNews: FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(false); // State for loader
     const [loadingData, setLoadingData] = useState(true); // State for initial data loading
+    const [newArticlesAvailable, setNewArticlesAvailable] = useState(false); // State for new articles notification
 
     // Extract fetchNewsFromApi as a named function
     const fetchNewsFromApi = async (forceRefresh = false) => {
         try {
             setLoadingData(true);
+            setNewArticlesAvailable(false);
             
             // تجربة استخدام API أولاً
             try {
@@ -71,6 +73,15 @@ const AllNews: FC = () => {
                         setNews(data.data);
                         setFilteredNews(data.data);
                         console.log(`Loaded ${data.data.length} news items from API`);
+                        
+                        // تحقق مما إذا كان هناك مقالات جديدة ليست في القائمة السابقة
+                        // هذا فقط للعرض، لا يؤثر على الوظائف
+                        try {
+                            await fetch(`${baseUrl}/api/rebuild-status?registerSlug=${locale || 'en'}_news_list`);
+                        } catch (e) {
+                            // تجاهل الأخطاء هنا
+                        }
+                        
                         return; // نجحنا في استخدام API
                     }
                 }
@@ -168,6 +179,27 @@ const AllNews: FC = () => {
                         >
                             {t('news.allNews', 'جميع الأخبار')}
                         </Typography>
+
+                        {/* Check for new build availability */}
+                        {loadingData && (
+                            <Box sx={{ mb: 4 }}>
+                                <Alert 
+                                    severity="info" 
+                                    sx={{ 
+                                        borderRadius: 2,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                                    }}
+                                >
+                                    <Typography variant="body1" sx={{ flexGrow: 1 }}>
+                                        {locale === 'ar' 
+                                            ? 'جاري تحميل الأخبار...' 
+                                            : 'Loading news...'}
+                                    </Typography>
+                                </Alert>
+                            </Box>
+                        )}
 
                         {/* Search and Controls Section */}
                         <Box 

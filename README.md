@@ -14,22 +14,51 @@ yarn dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Adding New News Articles
+## معالجة مشكلة المقالات الجديدة وخطأ 504
 
-To add new news articles to the website:
+### المشكلة
+قد تواجه أحيانًا خطأ 504 Gateway Timeout عند محاولة الوصول إلى مقالات جديدة، حتى بعد إعادة بناء الموقع (rebuild).
 
-1. Edit `news.json` in the repository to add your new article entry
-2. Make sure to include all required fields (id, slug, title, title_ar, shortDescription, shortDescription_ar, description, description_ar, image, date)
-3. Push your changes to the repository
+### الحل
+تم تحسين الموقع للتعامل مع هذه المشكلة بالطرق التالية:
 
-### Seeing New Articles on the Live Site
+1. **آلية الجلب المتعددة**: 
+   - المحاولة الأولى: استخدام API الداخلي
+   - المحاولة الثانية: جلب البيانات مباشرة من GitHub
 
-After adding new articles to `news.json`, you need to:
+2. **معالجة الأخطاء المحسنة**:
+   - زيادة وقت الانتظار (timeout)
+   - تعزيز المحاولات المتكررة
+   - عرض رسائل خطأ أكثر وضوحًا
 
-1. Wait for the automatic rebuild (up to 60 seconds), or
-2. Visit the main news page directly: [https://your-site.vercel.app/all-news?refresh=true](https://your-site.vercel.app/all-news?refresh=true)
+3. **التخزين المؤقت والتحديث**:
+   - تقليل فترة التحقق من صحة البيانات (revalidation) إلى 60 ثانية
+   - زر "تحديث" لتحديث البيانات يدويًا
 
-The `refresh=true` parameter ensures the latest articles are fetched from the repository.
+### طريقة إضافة مقال جديد
+1. أضف المقال الجديد إلى ملف `news.json` في المستودع
+2. انتظر إعادة بناء الموقع (قد يستغرق بضع دقائق)
+3. إذا لم يظهر المقال الجديد:
+   - اضغط على زر "تحديث" في صفحة الأخبار
+   - أو أعد تحميل الصفحة مع إضافة `?refresh=true` إلى عنوان URL
+
+### حل مشكلة 504 للمقالات الجديدة
+إذا استمرت مشكلة 504 لمقال جديد:
+
+1. **تأكد من صحة الـ slug**:
+   - يجب أن يكون الـ slug متطابقًا تمامًا مع ما في ملف `news.json`
+   - حالة الأحرف (كبيرة/صغيرة) مهمة
+
+2. **استخدم الجلب المباشر**:
+   - أضف `?direct=true` إلى عنوان URL للمقال لتجاوز API واستخدام الجلب المباشر من GitHub
+
+3. **أعد تشغيل الخادم**:
+   - في حالات نادرة، قد تحتاج إلى إعادة تشغيل خادم الموقع
+
+### تفاصيل فنية
+- تم إضافة آلية تحقق من حالة إعادة البناء في `/api/rebuild-status`
+- تم تحسين آلية التخزين المؤقت لتجنب الطلبات المتكررة لنفس البيانات
+- تم زيادة الوقت المسموح به للطلبات الخارجية
 
 ## Important Note About Articles
 

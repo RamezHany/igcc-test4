@@ -78,46 +78,61 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug }) => {
             // تنظيف السلج من أي امتداد .json
             const cleanSlug = slug.replace(/\.json$/, '');
             
-            // جلب البيانات بشكل مباشر من الجيثب
+            console.log(`Fetching article: ${cleanSlug}`);
+            
+            // محاولة 1: استخدام API المحسن
+            const baseUrl = window.location.origin;
+            console.log(`Attempt 1: Using API at ${baseUrl}/api/news/${cleanSlug}`);
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
+            
             try {
-                console.log(`Fetching article: ${cleanSlug}`);
-                
-                // محاولة 1: استخدام API المحسن
-                const baseUrl = window.location.origin;
-                try {
-                    console.log(`Attempt 1: Using API at ${baseUrl}/api/news/${cleanSlug}`);
-                    const response = await fetch(`${baseUrl}/api/news/${cleanSlug}?locale=${currentLocale}&refresh=true`, {
-                        method: 'GET',
-                        headers: {
-                            'Cache-Control': 'no-cache'
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.success && data.data) {
-                            setNewsItem(data.data);
-                            return;
-                        }
-                    }
-                    
-                    // إذا وصلنا إلى هنا، فإن API لم ينجح - نجرب الخطة البديلة
-                    console.log('API fetch failed, trying direct data fetch');
-                } catch (apiError) {
-                    console.warn('API error, trying fallback method:', apiError);
-                }
-                
-                // محاولة 2: جلب البيانات مباشرة من GitHub
-                console.log(`Attempt 2: Fetching all news from GitHub and filtering by slug`);
-                
-                // جلب كل البيانات من GitHub مباشرة
-                const githubUrl = `https://raw.githubusercontent.com/RamezHany/igcc-test4/main/news.json`;
-                const githubResponse = await fetch(githubUrl, {
+                const response = await fetch(`${baseUrl}/api/news/${cleanSlug}?locale=${currentLocale}&refresh=true`, {
                     method: 'GET',
                     headers: {
                         'Cache-Control': 'no-cache'
-                    }
+                    },
+                    signal: controller.signal
                 });
+                
+                clearTimeout(timeout);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data) {
+                        setNewsItem(data.data);
+                        setLoading(false);
+                        return;
+                    }
+                }
+                
+                // إذا وصلنا إلى هنا، فإن API لم ينجح - نجرب الخطة البديلة
+                console.log('API fetch failed, trying direct data fetch');
+            } catch (apiError) {
+                console.warn('API error, trying fallback method:', apiError);
+                // نستمر بالمحاولة الثانية
+            }
+            
+            // محاولة 2: جلب البيانات مباشرة من GitHub
+            console.log(`Attempt 2: Fetching all news from GitHub and filtering by slug`);
+            
+            // إعداد timeout للمحاولة الثانية
+            const githubController = new AbortController();
+            const githubTimeout = setTimeout(() => githubController.abort(), 20000); // 20 seconds timeout
+            
+            try {
+                // جلب كل البيانات من GitHub مباشرة
+                const githubUrl = `https://raw.githubusercontent.com/RamezHany/igcc-test4/main/news.json?cachebust=${Date.now()}`;
+                const githubResponse = await fetch(githubUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    },
+                    signal: githubController.signal
+                });
+                
+                clearTimeout(githubTimeout);
                 
                 if (!githubResponse.ok) {
                     throw new Error(`GitHub responded with ${githubResponse.status}`);
@@ -146,10 +161,10 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug }) => {
                 
                 // تعيين البيانات
                 setNewsItem(processedArticle);
-                
-            } catch (fetchErr: any) {
-                console.error('Error fetching news:', fetchErr);
-                throw fetchErr;
+            } catch (githubErr: any) {
+                console.error('Error fetching from GitHub:', githubErr);
+                // ننقل الخطأ إلى المستوى الأعلى
+                throw githubErr;
             }
         } catch (err: any) {
             console.error('Error fetchNewsData:', err);
@@ -162,6 +177,16 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug }) => {
     // تحميل البيانات عند تغيير السلج أو اللغة
     useEffect(() => {
         if (router.isReady && slug) {
+            // تسجيل زيارة للصفحة في نظام التتبع
+            try {
+                const baseUrl = window.location.origin;
+                fetch(`${baseUrl}/api/rebuild-status?registerSlug=${slug}`).catch(e => {
+                    // تجاهل الأخطاء
+                });
+            } catch (e) {
+                // تجاهل الأخطاء
+            }
+            
             fetchNewsData();
         }
     }, [slug, currentLocale, router.isReady]);
