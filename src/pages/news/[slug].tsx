@@ -16,6 +16,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import type { News } from '@/interfaces/News';
 import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
 
 // Styled Paper for the News Detail Container
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -41,6 +42,28 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const currentLocale = router.locale || initialLocale;
+    
+    // If fallback page is loading, show a loading state
+    if (router.isFallback) {
+        return (
+            <MainLayout>
+                <Container>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        justifyContent: 'center', 
+                        alignItems: 'center', 
+                        height: '50vh' 
+                    }}>
+                        <CircularProgress color="primary" size={60} sx={{ mb: 2 }} />
+                        <Typography variant="h4">
+                            {currentLocale === 'ar' ? 'جاري تحميل المقال...' : 'Loading article...'}
+                        </Typography>
+                    </Box>
+                </Container>
+            </MainLayout>
+        );
+    }
 
     // الدالة لجلب بيانات المقال من API
     const fetchNewsData = async () => {
@@ -49,12 +72,12 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
             setError(null);
 
             // جلب البيانات من API
-            const protocol = window.location.protocol;
-            const host = window.location.host;
-            const baseUrl = `${protocol}//${host}`;
+            const baseUrl = window.location.origin;
+            
+            // استخدام fetch مع timeout
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
-
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+            
             try {
                 const response = await fetch(
                     `${baseUrl}/api/news/${slug}?locale=${currentLocale}`,
@@ -64,7 +87,7 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
                 clearTimeout(timeoutId);
                 
                 if (!response.ok) {
-                    throw new Error(`Failed to fetch: ${response.status}`);
+                    throw new Error(`${response.status}: ${response.statusText}`);
                 }
                 
                 const data = await response.json();
@@ -72,17 +95,30 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
                 if (data.success && data.data) {
                     setNewsItem(data.data);
                 } else {
-                    throw new Error("No data found");
+                    throw new Error(data.message || "No data found");
                 }
             } catch (fetchErr: any) {
                 if (fetchErr.name === 'AbortError') {
-                    throw new Error('تجاوز وقت الاتصال، يرجى المحاولة مرة أخرى');
+                    console.error('Fetch timeout, trying again with longer timeout');
+                    // Try again with longer timeout as fallback
+                    try {
+                        const response = await fetch(`${baseUrl}/api/news/${slug}?locale=${currentLocale}`);
+                        if (!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+                        const data = await response.json();
+                        if (data.success && data.data) {
+                            setNewsItem(data.data);
+                            return;
+                        }
+                    } catch (retryErr) {
+                        console.error('Retry also failed:', retryErr);
+                    }
+                    throw new Error(currentLocale === 'ar' ? 'تجاوز وقت الاتصال، يرجى المحاولة مرة أخرى' : 'Connection timeout, please try again');
                 }
                 throw fetchErr;
             }
         } catch (err: any) {
             console.error('Error fetching news:', err);
-            setError(err.message || 'حدث خطأ أثناء تحميل المقال');
+            setError(err.message || (currentLocale === 'ar' ? 'حدث خطأ أثناء تحميل المقال' : 'An error occurred while loading the article'));
         } finally {
             setLoading(false);
         }
@@ -90,7 +126,7 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
 
     // تحميل البيانات عند تغيير السلج أو اللغة
     useEffect(() => {
-        if (router.isReady) {
+        if (router.isReady && slug) {
             fetchNewsData();
         }
     }, [slug, currentLocale, router.isReady]);
@@ -109,7 +145,7 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
                     }}>
                         <CircularProgress color="primary" size={60} sx={{ mb: 2 }} />
                         <Typography variant="h4">
-                            جاري تحميل المقال...
+                            {currentLocale === 'ar' ? 'جاري تحميل المقال...' : 'Loading article...'}
                         </Typography>
                     </Box>
                 </Container>
@@ -123,16 +159,16 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
             <MainLayout>
                 <Container>
                     <Box sx={{ textAlign: 'center', my: 8 }}>
-                        <Typography variant="h4" color="error.main" sx={{ mb: 4 }}>
-                            {error}
-                        </Typography>
+                        <Alert severity="error" sx={{ mb: 4 }}>
+                            <Typography variant="h6">{error}</Typography>
+                        </Alert>
                         <Button 
                             variant="contained" 
                             color="primary" 
                             onClick={fetchNewsData}
                             sx={{ mx: 2 }}
                         >
-                            إعادة المحاولة
+                            {currentLocale === 'ar' ? 'إعادة المحاولة' : 'Retry'}
                         </Button>
                         <Button 
                             variant="outlined" 
@@ -140,7 +176,7 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
                             onClick={() => router.push('/all-news')}
                             sx={{ mx: 2 }}
                         >
-                            العودة إلى قائمة الأخبار
+                            {currentLocale === 'ar' ? 'العودة إلى قائمة الأخبار' : 'Back to News List'}
                         </Button>
                     </Box>
                 </Container>
@@ -153,16 +189,20 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
         return (
             <MainLayout>
                 <Container>
-                    <Typography variant="h4" align="center" sx={{ my: 8 }}>
-                        {t('news.notFound', 'المقال غير موجود')}
-                    </Typography>
-                    <Box sx={{ textAlign: 'center' }}>
+                    <Box sx={{ textAlign: 'center', my: 8 }}>
+                        <Alert severity="warning" sx={{ mb: 4 }}>
+                            <Typography variant="h6">
+                                {currentLocale === 'ar' 
+                                    ? 'المقال غير موجود أو لم يتم العثور عليه' 
+                                    : 'Article not found or unavailable'}
+                            </Typography>
+                        </Alert>
                         <Button 
                             variant="contained" 
                             color="primary" 
                             onClick={() => router.push('/all-news')}
                         >
-                            العودة إلى قائمة الأخبار
+                            {currentLocale === 'ar' ? 'العودة إلى قائمة الأخبار' : 'Back to News List'}
                         </Button>
                     </Box>
                 </Container>
@@ -204,8 +244,8 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
                                 </Grid>
 
                                 {/* Main Image */}
-                                {newsItem.image.slice(0, 1).map((img, index) => (
-                                    <Grid item xs={12} key={index}>
+                                {newsItem.image && newsItem.image.length > 0 && (
+                                    <Grid item xs={12}>
                                         <Box
                                             sx={{
                                                 position: 'relative',
@@ -222,10 +262,10 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
                                             }}
                                         >
                                             <Image
-                                                src={img.url}
-                                                alt={`${newsItem.title} - صورة ${index + 1}`}
-                                                width={800}
-                                                height={600}
+                                                src={newsItem.image[0].url}
+                                                alt={`${newsItem.title} - ${currentLocale === 'ar' ? 'صورة' : 'image'} 1`}
+                                                width={newsItem.image[0].width || 800}
+                                                height={newsItem.image[0].height || 600}
                                                 priority
                                                 style={{
                                                     objectFit: 'cover',
@@ -235,20 +275,20 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
                                             />
                                         </Box>
                                     </Grid>
-                                ))}
+                                )}
 
                                 {/* Description */}
                                 <Grid item xs={12}>
                                     <Box sx={{ mt: 4 }}>
-                                        {newsItem.description.map((paragraph, index) => (
+                                        {newsItem.description && newsItem.description.map((paragraph, index) => (
                                             <Typography
                                                 key={index}
                                                 sx={{
                                                     mb: 3,
-                                                    color: 'text.secondary',
+                                                    color: 'text.primary',
                                                     fontSize: '1.1rem',
                                                     lineHeight: 1.8,
-                                                    textAlign: 'justify',
+                                                    textAlign: currentLocale === 'ar' ? 'right' : 'left',
                                                 }}
                                             >
                                                 {paragraph}
@@ -273,7 +313,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
     };
 };
 
-// جلب خصائص الصفحة الثابتة - نرجع فقط معلومات السلج واللغة
+// جلب خصائص الصفحة الثابتة - نعيد فقط معلومات السلج واللغة
 export const getStaticProps: GetStaticProps = async ({ params, locale }) => {
     if (!params?.slug) {
         return { notFound: true };
@@ -281,28 +321,15 @@ export const getStaticProps: GetStaticProps = async ({ params, locale }) => {
 
     const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
 
-    try {
-        // نرجع فقط الترجمات والسلج - بدون أي جلب للبيانات من جيثب
-        return {
-            props: {
-                ...(await serverSideTranslations(locale || 'ar', ['common'])),
-                slug,
-                locale: locale || 'ar'
-            },
-            // إعادة بناء الصفحة كل ساعة كحد أقصى
-            revalidate: 3600
-        };
-    } catch (error) {
-        console.error('Error in getStaticProps:', error);
-        // في حالة الخطأ، نرجع الحد الأدنى من البيانات
-        return {
-            props: {
-                slug,
-                locale: locale || 'ar'
-            },
-            revalidate: 60
-        };
-    }
+    return {
+        props: {
+            ...(await serverSideTranslations(locale || 'ar', ['common'])),
+            slug,
+            locale: locale || 'ar'
+        },
+        // إعادة بناء الصفحة كل ساعة كحد أقصى
+        revalidate: 3600
+    };
 };
 
 export default NewsDetail;
