@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useState } from 'react';
 import { useRouter } from 'next/router';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -11,10 +11,10 @@ import { MainLayout } from '@/components/layout';
 import Paper from '@mui/material/Paper';
 import Divider from '@mui/material/Divider';
 import { useTranslation } from 'next-i18next';
-import { GetStaticProps, GetStaticPaths } from 'next';
+import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import type { News } from '@/interfaces/News';
-import { fetchNewsFromGitHub, fetchNewsBySlug, processNewsItemByLocale } from '@/utils/githubApi';
+import { fetchNewsBySlug, processNewsItemByLocale } from '@/utils/githubApi';
 import CircularProgress from '@mui/material/CircularProgress';
 
 // Styled Paper for the News Detail Container
@@ -31,18 +31,16 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 
 interface NewsDetailProps {
     newsItem?: News;
-    isFromApi?: boolean;
+    error?: string;
 }
 
-const NewsDetail: FC<NewsDetailProps> = ({ newsItem: initialNewsItem, isFromApi }) => {
+const NewsDetail: FC<NewsDetailProps> = ({ newsItem, error }) => {
     const router = useRouter();
     const { t } = useTranslation('common');
-    const [newsItem, setNewsItem] = useState<News | null>(initialNewsItem || null);
     const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
     
-    // Handle fallback rendering
-    if (router.isFallback) {
+    // Handle loading state while route is changing
+    if (router.isFallback || loading) {
         return (
             <MainLayout>
                 <Container>
@@ -62,74 +60,8 @@ const NewsDetail: FC<NewsDetailProps> = ({ newsItem: initialNewsItem, isFromApi 
             </MainLayout>
         );
     }
-    
-    // Fetch news item from API when slug changes or on initial load
-    useEffect(() => {
-        const fetchNewsFromApi = async () => {
-            // تحقق مما إذا كنا بحاجة إلى تحميل البيانات من API
-            // سيتم التحميل في حالتين:
-            // 1. إذا كانت isFromApi=true في props (من getStaticProps)
-            // 2. إذا كانت معلمة fromApi=true في URL (من الصفحات الأخرى)
-            const shouldFetchFromApi = isFromApi || router.query.fromApi === 'true';
-            
-            // إذا كان لدينا بالفعل عنصر الأخبار من SSG/SSR ولا نحتاج إلى التحميل من API، فتخطي
-            if ((initialNewsItem && !shouldFetchFromApi) || loading || !router.isReady) return;
-            
-            const { slug, locale } = router.query;
-            if (!slug) return;
-            
-            try {
-                setLoading(true);
-                setError(null);
-                
-                // Get the base URL for the API
-                const protocol = window.location.protocol;
-                const host = window.location.host;
-                const baseUrl = `${protocol}//${host}`;
-                
-                // Add timeout to avoid client-side hanging
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
-                
-                // Call our API endpoint to get news by slug
-                const response = await fetch(
-                    `${baseUrl}/api/news/${slug}?locale=${locale || 'en'}`,
-                    { signal: controller.signal }
-                );
-                
-                clearTimeout(timeoutId);
-                
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        router.push('/404');
-                        return;
-                    }
-                    throw new Error(`Failed to fetch news: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                if (!result.success || !result.data) {
-                    throw new Error('Invalid API response format');
-                }
-                
-                setNewsItem(result.data);
-            } catch (err: any) {
-                console.error('Error fetching news item from API:', err);
-                if (err.name === 'AbortError') {
-                    setError('تجاوز الوقت المسموح لتحميل البيانات. يرجى المحاولة مرة أخرى.');
-                } else {
-                    setError('حدث خطأ أثناء تحميل الخبر');
-                }
-            } finally {
-                setLoading(false);
-            }
-        };
-        
-        fetchNewsFromApi();
-    }, [router.query.slug, router.query.locale, router.query.fromApi, initialNewsItem, isFromApi, loading, router.isReady, t, router]);
 
-    // If error occurred during API fetch
+    // If error occurred during server-side fetching
     if (error) {
         return (
             <MainLayout>
@@ -249,126 +181,61 @@ const NewsDetail: FC<NewsDetailProps> = ({ newsItem: initialNewsItem, isFromApi 
     );
 };
 
-export const getStaticPaths: GetStaticPaths = async () => {
+// ใช้ getServerSideProps แทน getStaticProps/getStaticPaths
+export const getServerSideProps: GetServerSideProps = async ({ params, locale }) => {
     try {
-        // Use our utility function to fetch the news data
-        const newsData = await fetchNewsFromGitHub();
+        // ตรวจสอบและตัวแปร slug
+        if (!params?.slug || Array.isArray(params.slug)) {
+            return { notFound: true };
+        }
         
-        // Generate paths for both Arabic and English using the same data
-        // Limit the number of paths to improve build time (e.g., only the 5 most recent news items)
-        // This helps with build time while still pre-rendering the most important pages
-        const recentNews = newsData.slice(0, 5);
-        
-        const paths = [
-            // English paths for recent news
-            ...recentNews.map((news: News) => ({
-                params: { slug: news.slug },
-                locale: 'en',
-            })),
-            // Arabic paths for recent news
-            ...recentNews.map((news: News) => ({
-                params: { slug: news.slug },
-                locale: 'ar',
-            })),
-        ];
-
-        return {
-            paths,
-            fallback: 'unstable_blocking', // Use unstable_blocking as a hybrid approach
-        };
-    } catch (error) {
-        console.error('Error generating static paths:', error);
-        // Return empty paths with fallback
-        return {
-            paths: [],
-            fallback: 'unstable_blocking',
-        };
-    }
-};
-
-export const getStaticProps: GetStaticProps = async ({ params, locale }) => {
-    if (!params?.slug || Array.isArray(params.slug)) {
-        return { notFound: true };
-    }
-    
-    try {
         const slug = params.slug.toString();
         
-        // Get translations first (most important for rendering)
+        // โหลดข้อมูลการแปล
         const translations = await serverSideTranslations(locale ?? 'en', ['common']);
-            
-        // Fast return for Vercel: for unusual slugs (not found in our known patterns), 
-        // don't even try to fetch from GitHub in SSG - let the client handle it
-        const isCommonSlugPattern = /^[a-z0-9-]+$/.test(slug) && slug.length > 5 && !slug.includes('test');
-        const seemsLikeTestSlug = /test|temp|dummy|example|demo|ppppo/.test(slug);
         
-        if (!isCommonSlugPattern || seemsLikeTestSlug) {
-            // Skip fetching on the server, let client handle it
-            console.log(`Fast path: Skipping SSG fetch for potentially problematic slug: ${slug}`);
-            return {
-                props: {
-                    ...translations,
-                    isFromApi: true, // Force client-side fetch
-                },
-                // Short revalidation for test slugs
-                revalidate: 10
-            };
-        }
-            
-        // For normal slugs, attempt to fetch with a short timeout
         try {
-            // Set a timeout for the fetch operation (very short for Vercel)
+            // ใช้ controller สำหรับ timeout
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2500); // Just 2.5 seconds max for Vercel
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
             
-            // Use our utility function to get the news item by slug
+            // ดึงข้อมูลข่าวตาม slug
             const newsItem = await fetchNewsBySlug(slug);
-            
-            // Clear the timeout
             clearTimeout(timeoutId);
             
-            // If no matching news item is found, return 404
+            // ถ้าไม่พบข้อมูล
             if (!newsItem) {
                 return { notFound: true };
             }
             
-            // Process the news item based on locale
+            // ประมวลผลข้อมูลตามภาษา
             const processedNewsItem = processNewsItemByLocale(newsItem, locale?.toString() || 'en');
             
-            // Return properly with translations and data
+            // ส่งข้อมูลไปยัง component
             return {
                 props: {
                     ...translations,
                     newsItem: processedNewsItem,
-                    isFromApi: false,
-                },
-                // Revalidate every hour
-                revalidate: 3600,
+                }
             };
-        } catch (fetchError) {
-            // If fetching fails for any reason, fall back to client-side
-            console.error('Fetch error in getStaticProps:', fetchError);
+        } catch (fetchError: any) {
+            console.error(`Error fetching news for slug ${slug}:`, fetchError);
             
+            // ส่งข้อผิดพลาดไปยัง component
             return {
                 props: {
                     ...translations,
-                    isFromApi: true, // Force client-side fetch
-                },
-                // Short revalidation for problem fetches
-                revalidate: 60,
+                    error: fetchError.name === 'AbortError' 
+                        ? 'تجاوز الوقت المسموح لتحميل البيانات'
+                        : 'حدث خطأ أثناء تحميل البيانات'
+                }
             };
         }
-    } catch (error) {
-        console.error('Fatal error in getStaticProps:', error);
         
-        // Last resort - don't even try to get translations
-        return {
-            props: {
-                isFromApi: true,
-            },
-            revalidate: 30,
-        };
+    } catch (error) {
+        console.error('Server-side error:', error);
+        return { notFound: true };
     }
-};
+}
 
 export default NewsDetail;
