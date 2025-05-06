@@ -410,14 +410,14 @@ export const getStaticPaths: GetStaticPaths = async () => {
         }
         
         // استخراج جميع الـ slugs من البيانات
-        const allSlugs = data.news.map(item => item.slug);
+        const allSlugs = data.news.map((item: News) => item.slug);
         
         console.log(`Found ${allSlugs.length} articles to pre-generate:`, allSlugs);
         
         // إنشاء مسارات لكل لغة
         const paths = [
-            ...allSlugs.map(slug => ({ params: { slug }, locale: 'en' })),
-            ...allSlugs.map(slug => ({ params: { slug }, locale: 'ar' }))
+            ...allSlugs.map((slug: string) => ({ params: { slug }, locale: 'en' })),
+            ...allSlugs.map((slug: string) => ({ params: { slug }, locale: 'ar' }))
         ];
         
         return {
