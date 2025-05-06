@@ -46,51 +46,52 @@ const AllNews: FC = () => {
     const [loading, setLoading] = useState(false); // State for loader
     const [loadingData, setLoadingData] = useState(true); // State for initial data loading
 
-    useEffect(() => {
-        const fetchNewsFromApi = async () => {
+    // Extract fetchNewsFromApi as a named function
+    const fetchNewsFromApi = async (forceRefresh = false) => {
+        try {
+            setLoadingData(true);
+            
+            // تجربة استخدام API أولاً
             try {
-                setLoadingData(true);
+                // Get the base URL for the API
+                const protocol = window.location.protocol;
+                const host = window.location.host;
+                const baseUrl = `${protocol}//${host}`;
                 
-                // تجربة استخدام API أولاً
-                try {
-                    // Get the base URL for the API
-                    const protocol = window.location.protocol;
-                    const host = window.location.host;
-                    const baseUrl = `${protocol}//${host}`;
+                // Force refresh when requested or first loading
+                const refreshParam = forceRefresh ? "true" : "true";
+                
+                // Call our API endpoint to get all news with refresh parameter
+                const response = await fetch(`${baseUrl}/api/news?locale=${locale || 'en'}&refresh=${refreshParam}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
                     
-                    // Force refresh when first loading the page to get the latest data
-                    const refreshParam = "true";
-                    
-                    // Call our API endpoint to get all news with refresh parameter
-                    const response = await fetch(`${baseUrl}/api/news?locale=${locale || 'en'}&refresh=${refreshParam}`);
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        
-                        if (data.success && data.data) {
-                            setNews(data.data);
-                            setFilteredNews(data.data);
-                            console.log(`Loaded ${data.data.length} news items from API`);
-                            return; // نجحنا في استخدام API
-                        }
+                    if (data.success && data.data) {
+                        setNews(data.data);
+                        setFilteredNews(data.data);
+                        console.log(`Loaded ${data.data.length} news items from API`);
+                        return; // نجحنا في استخدام API
                     }
-                    
-                    // إذا وصلنا إلى هنا، فإن API لم يعمل
-                    throw new Error('API failed, falling back to direct load');
-                } catch (apiError) {
-                    console.warn('Error using API, falling back to direct load:', apiError);
-                    // استخدام loadNewsData كاحتياطي
-                    await loadNewsData(locale || 'en');
-            setNews(dataNews);
-            setFilteredNews(dataNews);
                 }
-            } catch (error) {
-                console.error('Failed to load news:', error);
-            } finally {
-                setLoadingData(false);
+                
+                // إذا وصلنا إلى هنا، فإن API لم يعمل
+                throw new Error('API failed, falling back to direct load');
+            } catch (apiError) {
+                console.warn('Error using API, falling back to direct load:', apiError);
+                // استخدام loadNewsData كاحتياطي
+                await loadNewsData(locale || 'en');
+                setNews(dataNews);
+                setFilteredNews(dataNews);
             }
-        };
+        } catch (error) {
+            console.error('Failed to load news:', error);
+        } finally {
+            setLoadingData(false);
+        }
+    };
 
+    useEffect(() => {
         fetchNewsFromApi();
     }, [locale]);
 
@@ -143,6 +144,12 @@ const AllNews: FC = () => {
         setSearchTerm('');
     };
 
+    // Force reload news data
+    const reloadNews = () => {
+        setLoadingData(true);
+        fetchNewsFromApi(true); // Pass true to force refresh
+    };
+
     return (
         <MainLayout>
             <Box sx={{ backgroundColor: '#f5f5f5', minHeight: 'calc(100vh - 64px)', paddingTop: '40px' }}>
@@ -162,7 +169,7 @@ const AllNews: FC = () => {
                             {t('news.allNews', 'جميع الأخبار')}
                         </Typography>
 
-                        {/* Search Section */}
+                        {/* Search and Controls Section */}
                         <Box 
                             sx={{ 
                                 mb: 6, 
@@ -173,6 +180,7 @@ const AllNews: FC = () => {
                                 borderRadius: 2,
                                 backgroundColor: 'background.paper',
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                                flexWrap: { xs: 'wrap', md: 'nowrap' }
                             }}
                         >
                             <TextField
@@ -196,11 +204,19 @@ const AllNews: FC = () => {
                                     variant="outlined" 
                                     color="primary" 
                                     onClick={clearSearch}
-                                    // sx={{ minWidth: 100 }}
                                 >
                                     {locale === 'ar' ? 'مسح' : 'Clear'}
                                 </Button>
                             )}
+                            
+                            <Button 
+                                variant="contained" 
+                                color="primary" 
+                                onClick={reloadNews}
+                                disabled={loadingData}
+                            >
+                                {locale === 'ar' ? 'تحديث' : 'Refresh'}
+                            </Button>
                         </Box>
 
                         {/* Initial Data Loading */}

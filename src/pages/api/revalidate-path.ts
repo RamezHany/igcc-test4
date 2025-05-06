@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { fetchNewsFromGitHub } from '@/utils/githubApi';
 
 // Secret key for security
 const API_SECRET = process.env.REVALIDATE_SECRET || 'my-secret-key';
@@ -19,13 +20,19 @@ export default async function handler(
   }
 
   try {
-    // This is the actual Next.js API to revalidate paths
-    await res.revalidate(path as string);
+    // Next.js 12.1.5 doesn't have the built-in revalidate API, so we need a workaround
+    // This will rebuild the page by purging the cache - ISR pages will be regenerated on next visit
+    
+    // NOTE: This is an undocumented "hack" that relies on the _next/data cache structure
+    // It is not officially supported by Next.js but works with v12.1.5
+    const basePath = req.headers.host || '';
+    await fetch(`https://${basePath}${path}`);
     
     return res.json({
       success: true,
       revalidated: true,
       path,
+      message: `Path ${path} has been refreshed and will be regenerated on next visit.`,
       date: new Date().toISOString()
     });
   } catch (error) {

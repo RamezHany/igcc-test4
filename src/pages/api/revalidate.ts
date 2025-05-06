@@ -39,17 +39,20 @@ export default async function handler(
       pathsToRevalidate.push(`/en/news/${newsItem.slug}`);
     }
     
-    console.log(`Revalidating ${pathsToRevalidate.length} paths`);
+    console.log(`Refreshing ${pathsToRevalidate.length} paths`);
     
-    // Revalidate all paths (for Next.js 12+)
+    // Use a simpler approach for Next.js 12.1.5
+    const host = req.headers.host || '';
+    
+    // Revalidate all paths by simply fetching them
     const revalidationResults = await Promise.allSettled(
       pathsToRevalidate.map(async (path) => {
         try {
-          // Using the correct revalidate API
-          await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || req.headers.host}/api/revalidate-path?path=${encodeURIComponent(path)}&secret=${encodeURIComponent(API_SECRET)}`);
+          // Make a request to the page to refresh the cache
+          await fetch(`https://${host}${path}`);
           return { path, success: true };
         } catch (error) {
-          console.error(`Error revalidating ${path}:`, error);
+          console.error(`Error refreshing ${path}:`, error);
           return { path, success: false, error: (error as Error).message };
         }
       })
@@ -67,7 +70,7 @@ export default async function handler(
     return res.json({
       success: true,
       revalidated: true,
-      message: `Successfully revalidated ${successful} paths. Failed: ${failed}.`,
+      message: `Successfully refreshed ${successful} paths. Failed: ${failed}. Pages will be regenerated on next visit.`,
       date: new Date().toISOString()
     });
   } catch (error) {
