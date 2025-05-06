@@ -58,8 +58,11 @@ const AllNews: FC = () => {
                     const host = window.location.host;
                     const baseUrl = `${protocol}//${host}`;
                     
-                    // Call our API endpoint to get all news
-                    const response = await fetch(`${baseUrl}/api/news?locale=${locale || 'en'}`);
+                    // Force refresh when first loading the page to get the latest data
+                    const refreshParam = "true";
+                    
+                    // Call our API endpoint to get all news with refresh parameter
+                    const response = await fetch(`${baseUrl}/api/news?locale=${locale || 'en'}&refresh=${refreshParam}`);
                     
                     if (response.ok) {
                         const data = await response.json();
@@ -355,6 +358,7 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
         props: {
             ...(await serverSideTranslations(locale || 'ar', ['common'])),
         },
+        revalidate: 60 // إعادة التحقق كل 60 ثانية
     };
 };
 

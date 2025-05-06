@@ -350,7 +350,7 @@ export const getStaticProps: GetStaticProps = async ({ params, locale }) => {
             ...(await serverSideTranslations(locale || 'ar', ['common'])),
             slug // ترجع فقط السلج وليس البيانات الكاملة
         },
-        revalidate: 3600 // إعادة بناء الصفحة كل ساعة كحد أقصى
+        revalidate: 60 // إعادة التحقق كل 60 ثانية بدلاً من ساعة للتأكد من تحديث المقالات الجديدة سريعاً
     };
 };
 
