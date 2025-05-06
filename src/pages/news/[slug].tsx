@@ -17,6 +17,7 @@ import type { News } from '@/interfaces/News';
 import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
 import Alert from '@mui/material/Alert';
+import Head from 'next/head';
 
 // Styled Paper for the News Detail Container
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -31,17 +32,18 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 }));
 
 interface NewsDetailProps {
-    slug: string; 
-    locale: string;
+    slug: string;
 }
 
-const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
+// IMPORTANT: This page uses Client-Side Rendering for article content
+// with a static shell for performance and to avoid timeouts
+const NewsDetail: FC<NewsDetailProps> = ({ slug }) => {
     const router = useRouter();
     const { t } = useTranslation('common');
     const [newsItem, setNewsItem] = useState<News | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const currentLocale = router.locale || initialLocale;
+    const currentLocale = router.locale || 'ar';
     
     // If fallback page is loading, show a loading state
     if (router.isFallback) {
@@ -67,24 +69,22 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
 
     // الدالة لجلب بيانات المقال من API
     const fetchNewsData = async () => {
+        if (!slug) return;
+        
         try {
             setLoading(true);
             setError(null);
 
+            // تنظيف السلج من أي امتداد .json
+            const cleanSlug = slug.replace(/\.json$/, '');
+            
             // جلب البيانات من API
             const baseUrl = window.location.origin;
             
-            // استخدام fetch مع timeout
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
-            
+            // استخدام fetch بدون timeout - نعتمد على عرض رسالة تحميل للمستخدم
             try {
-                const response = await fetch(
-                    `${baseUrl}/api/news/${slug}?locale=${currentLocale}`,
-                    { signal: controller.signal }
-                );
-                
-                clearTimeout(timeoutId);
+                console.log(`Fetching article: ${cleanSlug}`);
+                const response = await fetch(`${baseUrl}/api/news/${cleanSlug}?locale=${currentLocale}`);
                 
                 if (!response.ok) {
                     throw new Error(`${response.status}: ${response.statusText}`);
@@ -98,26 +98,11 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
                     throw new Error(data.message || "No data found");
                 }
             } catch (fetchErr: any) {
-                if (fetchErr.name === 'AbortError') {
-                    console.error('Fetch timeout, trying again with longer timeout');
-                    // Try again with longer timeout as fallback
-                    try {
-                        const response = await fetch(`${baseUrl}/api/news/${slug}?locale=${currentLocale}`);
-                        if (!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-                        const data = await response.json();
-                        if (data.success && data.data) {
-                            setNewsItem(data.data);
-                            return;
-                        }
-                    } catch (retryErr) {
-                        console.error('Retry also failed:', retryErr);
-                    }
-                    throw new Error(currentLocale === 'ar' ? 'تجاوز وقت الاتصال، يرجى المحاولة مرة أخرى' : 'Connection timeout, please try again');
-                }
+                console.error('Error fetching news:', fetchErr);
                 throw fetchErr;
             }
         } catch (err: any) {
-            console.error('Error fetching news:', err);
+            console.error('Error fetchNewsData:', err);
             setError(err.message || (currentLocale === 'ar' ? 'حدث خطأ أثناء تحميل المقال' : 'An error occurred while loading the article'));
         } finally {
             setLoading(false);
@@ -135,6 +120,10 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
     if (loading) {
         return (
             <MainLayout>
+                <Head>
+                    <title>{currentLocale === 'ar' ? 'جاري التحميل...' : 'Loading...'} | IGCC</title>
+                    <meta name="robots" content="noindex" />
+                </Head>
                 <Container>
                     <Box sx={{ 
                         display: 'flex', 
@@ -157,6 +146,10 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
     if (error) {
         return (
             <MainLayout>
+                <Head>
+                    <title>{currentLocale === 'ar' ? 'خطأ' : 'Error'} | IGCC</title>
+                    <meta name="robots" content="noindex" />
+                </Head>
                 <Container>
                     <Box sx={{ textAlign: 'center', my: 8 }}>
                         <Alert severity="error" sx={{ mb: 4 }}>
@@ -188,6 +181,10 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
     if (!newsItem) {
         return (
             <MainLayout>
+                <Head>
+                    <title>{currentLocale === 'ar' ? 'المقال غير موجود' : 'Article Not Found'} | IGCC</title>
+                    <meta name="robots" content="noindex" />
+                </Head>
                 <Container>
                     <Box sx={{ textAlign: 'center', my: 8 }}>
                         <Alert severity="warning" sx={{ mb: 4 }}>
@@ -210,9 +207,19 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
         );
     }
 
-    // عرض المقال
     return (
         <MainLayout>
+            <Head>
+                <title>{newsItem.title} | IGCC</title>
+                <meta name="description" content={newsItem.shortDescription} />
+                {/* OpenGraph tags for social sharing */}
+                <meta property="og:title" content={newsItem.title} />
+                <meta property="og:description" content={newsItem.shortDescription} />
+                {newsItem.image && newsItem.image.length > 0 && (
+                    <meta property="og:image" content={newsItem.image[0].url} />
+                )}
+            </Head>
+            
             <Box component="article" sx={{ backgroundColor: '#f5f5f5', minHeight: 'calc(100vh - 64px)', paddingTop: '40px' }}>
                 <Box sx={{ py: { xs: 6, md: 10 } }}>
                     <Container maxWidth="lg">
@@ -305,7 +312,7 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
     );
 };
 
-// جلب المسارات الثابتة - نستخدم fallback: true ليدعم كل السلجز المحتملة
+// تعريف المسارات الشائعة مسبقًا
 export const getStaticPaths: GetStaticPaths = async () => {
     // تعريف بعض المسارات الشائعة مسبقًا
     const commonPaths = [
@@ -329,7 +336,8 @@ export const getStaticPaths: GetStaticPaths = async () => {
     };
 };
 
-// جلب خصائص الصفحة الثابتة - نعيد فقط معلومات السلج واللغة
+// استخدم getStaticProps بدون اتصال بـ API لتجنب timeout
+// إنشاء صفحة "شل" فارغة ستقوم بتحميل محتواها على جانب العميل
 export const getStaticProps: GetStaticProps = async ({ params, locale }) => {
     if (!params?.slug) {
         return { notFound: true };
@@ -340,11 +348,9 @@ export const getStaticProps: GetStaticProps = async ({ params, locale }) => {
     return {
         props: {
             ...(await serverSideTranslations(locale || 'ar', ['common'])),
-            slug,
-            locale: locale || 'ar'
+            slug // ترجع فقط السلج وليس البيانات الكاملة
         },
-        // إعادة بناء الصفحة كل ساعة كحد أقصى
-        revalidate: 3600
+        revalidate: 3600 // إعادة بناء الصفحة كل ساعة كحد أقصى
     };
 };
 
