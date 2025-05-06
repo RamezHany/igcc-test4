@@ -280,28 +280,6 @@
         }
       ],
       "date": "2025-05-06"
-    },
-    {
-      "id": "1746551840620",
-      "slug": "ioioio",
-      "title": "ioioio",
-      "title_ar": "تاات",
-      "shortDescription": "z",
-      "shortDescription_ar": "لللل",
-      "description": [
-        "z"
-      ],
-      "description_ar": [
-        "لل"
-      ],
-      "image": [
-        {
-          "url": "https://raw.githubusercontent.com/RamezHany/igcc-test4/main/public/images/ioioio.png",
-          "width": 800,
-          "height": 600
-        }
-      ],
-      "date": "2025-05-06"
     }
   ]
 }
