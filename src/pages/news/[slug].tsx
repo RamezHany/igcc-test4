@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -11,11 +11,11 @@ import { MainLayout } from '@/components/layout';
 import Paper from '@mui/material/Paper';
 import Divider from '@mui/material/Divider';
 import { useTranslation } from 'next-i18next';
-import { GetServerSideProps } from 'next';
+import { GetStaticPaths, GetStaticProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import type { News } from '@/interfaces/News';
-import { fetchNewsBySlug, processNewsItemByLocale } from '@/utils/githubApi';
 import CircularProgress from '@mui/material/CircularProgress';
+import Button from '@mui/material/Button';
 
 // Styled Paper for the News Detail Container
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -30,17 +30,73 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 }));
 
 interface NewsDetailProps {
-    newsItem?: News;
-    error?: string;
+    slug: string; 
+    locale: string;
 }
 
-const NewsDetail: FC<NewsDetailProps> = ({ newsItem, error }) => {
+const NewsDetail: FC<NewsDetailProps> = ({ slug, locale: initialLocale }) => {
     const router = useRouter();
     const { t } = useTranslation('common');
-    const [loading, setLoading] = useState<boolean>(false);
-    
-    // Handle loading state while route is changing
-    if (router.isFallback || loading) {
+    const [newsItem, setNewsItem] = useState<News | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const currentLocale = router.locale || initialLocale;
+
+    // الدالة لجلب بيانات المقال من API
+    const fetchNewsData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            // جلب البيانات من API
+            const protocol = window.location.protocol;
+            const host = window.location.host;
+            const baseUrl = `${protocol}//${host}`;
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+            try {
+                const response = await fetch(
+                    `${baseUrl}/api/news/${slug}?locale=${currentLocale}`,
+                    { signal: controller.signal }
+                );
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    setNewsItem(data.data);
+                } else {
+                    throw new Error("No data found");
+                }
+            } catch (fetchErr: any) {
+                if (fetchErr.name === 'AbortError') {
+                    throw new Error('تجاوز وقت الاتصال، يرجى المحاولة مرة أخرى');
+                }
+                throw fetchErr;
+            }
+        } catch (err: any) {
+            console.error('Error fetching news:', err);
+            setError(err.message || 'حدث خطأ أثناء تحميل المقال');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // تحميل البيانات عند تغيير السلج أو اللغة
+    useEffect(() => {
+        if (router.isReady) {
+            fetchNewsData();
+        }
+    }, [slug, currentLocale, router.isReady]);
+
+    // عرض حالة التحميل
+    if (loading) {
         return (
             <MainLayout>
                 <Container>
@@ -53,7 +109,7 @@ const NewsDetail: FC<NewsDetailProps> = ({ newsItem, error }) => {
                     }}>
                         <CircularProgress color="primary" size={60} sx={{ mb: 2 }} />
                         <Typography variant="h4">
-                            جاري التحميل...
+                            جاري تحميل المقال...
                         </Typography>
                     </Box>
                 </Container>
@@ -61,32 +117,60 @@ const NewsDetail: FC<NewsDetailProps> = ({ newsItem, error }) => {
         );
     }
 
-    // If error occurred during server-side fetching
+    // عرض رسالة الخطأ
     if (error) {
         return (
             <MainLayout>
                 <Container>
-                    <Typography variant="h4" align="center" sx={{ my: 8, color: 'error.main' }}>
-                        {error}
-                    </Typography>
+                    <Box sx={{ textAlign: 'center', my: 8 }}>
+                        <Typography variant="h4" color="error.main" sx={{ mb: 4 }}>
+                            {error}
+                        </Typography>
+                        <Button 
+                            variant="contained" 
+                            color="primary" 
+                            onClick={fetchNewsData}
+                            sx={{ mx: 2 }}
+                        >
+                            إعادة المحاولة
+                        </Button>
+                        <Button 
+                            variant="outlined" 
+                            color="primary" 
+                            onClick={() => router.push('/all-news')}
+                            sx={{ mx: 2 }}
+                        >
+                            العودة إلى قائمة الأخبار
+                        </Button>
+                    </Box>
                 </Container>
             </MainLayout>
         );
     }
 
-    // If no news item was found, show a not found message
+    // عرض رسالة عدم وجود المقال
     if (!newsItem) {
         return (
             <MainLayout>
                 <Container>
                     <Typography variant="h4" align="center" sx={{ my: 8 }}>
-                        {t('news.notFound', 'الخبر غير موجود')}
+                        {t('news.notFound', 'المقال غير موجود')}
                     </Typography>
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Button 
+                            variant="contained" 
+                            color="primary" 
+                            onClick={() => router.push('/all-news')}
+                        >
+                            العودة إلى قائمة الأخبار
+                        </Button>
+                    </Box>
                 </Container>
             </MainLayout>
         );
     }
 
+    // عرض المقال
     return (
         <MainLayout>
             <Box component="article" sx={{ backgroundColor: '#f5f5f5', minHeight: 'calc(100vh - 64px)', paddingTop: '40px' }}>
@@ -181,61 +265,44 @@ const NewsDetail: FC<NewsDetailProps> = ({ newsItem, error }) => {
     );
 };
 
-// ใช้ getServerSideProps แทน getStaticProps/getStaticPaths
-export const getServerSideProps: GetServerSideProps = async ({ params, locale }) => {
-    try {
-        // ตรวจสอบและตัวแปร slug
-        if (!params?.slug || Array.isArray(params.slug)) {
-            return { notFound: true };
-        }
-        
-        const slug = params.slug.toString();
-        
-        // โหลดข้อมูลการแปล
-        const translations = await serverSideTranslations(locale ?? 'en', ['common']);
-        
-        try {
-            // ใช้ controller สำหรับ timeout
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
-            
-            // ดึงข้อมูลข่าวตาม slug
-            const newsItem = await fetchNewsBySlug(slug);
-            clearTimeout(timeoutId);
-            
-            // ถ้าไม่พบข้อมูล
-            if (!newsItem) {
-                return { notFound: true };
-            }
-            
-            // ประมวลผลข้อมูลตามภาษา
-            const processedNewsItem = processNewsItemByLocale(newsItem, locale?.toString() || 'en');
-            
-            // ส่งข้อมูลไปยัง component
-            return {
-                props: {
-                    ...translations,
-                    newsItem: processedNewsItem,
-                }
-            };
-        } catch (fetchError: any) {
-            console.error(`Error fetching news for slug ${slug}:`, fetchError);
-            
-            // ส่งข้อผิดพลาดไปยัง component
-            return {
-                props: {
-                    ...translations,
-                    error: fetchError.name === 'AbortError' 
-                        ? 'تجاوز الوقت المسموح لتحميل البيانات'
-                        : 'حدث خطأ أثناء تحميل البيانات'
-                }
-            };
-        }
-        
-    } catch (error) {
-        console.error('Server-side error:', error);
+// جلب المسارات الثابتة - نستخدم fallback: true ليدعم كل السلجز المحتملة
+export const getStaticPaths: GetStaticPaths = async () => {
+    return {
+        paths: [], // لا نقوم ببناء أي صفحات مسبقًا
+        fallback: true // استخدام fallback: true للسماح ببناء الصفحات عند الطلب
+    };
+};
+
+// جلب خصائص الصفحة الثابتة - نرجع فقط معلومات السلج واللغة
+export const getStaticProps: GetStaticProps = async ({ params, locale }) => {
+    if (!params?.slug) {
         return { notFound: true };
     }
-}
+
+    const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
+
+    try {
+        // نرجع فقط الترجمات والسلج - بدون أي جلب للبيانات من جيثب
+        return {
+            props: {
+                ...(await serverSideTranslations(locale || 'ar', ['common'])),
+                slug,
+                locale: locale || 'ar'
+            },
+            // إعادة بناء الصفحة كل ساعة كحد أقصى
+            revalidate: 3600
+        };
+    } catch (error) {
+        console.error('Error in getStaticProps:', error);
+        // في حالة الخطأ، نرجع الحد الأدنى من البيانات
+        return {
+            props: {
+                slug,
+                locale: locale || 'ar'
+            },
+            revalidate: 60
+        };
+    }
+};
 
 export default NewsDetail;
