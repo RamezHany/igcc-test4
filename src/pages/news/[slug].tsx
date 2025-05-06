@@ -130,7 +130,7 @@ const NewsDetail: FC<NewsDetailProps> = ({ slug }) => {
                 }
                 
                 // البحث عن المقال حسب الـ slug
-                const article = allData.news.find(item => item.slug === cleanSlug);
+                const article = allData.news.find((item: News) => item.slug === cleanSlug);
                 
                 if (!article) {
                     throw new Error(`Article with slug "${cleanSlug}" not found in news data`);
