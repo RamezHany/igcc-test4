@@ -62,15 +62,34 @@ const SummitPage: NextPageWithLayout = () => {
   const { locale, pathname } = router;
   const isRtl = locale === 'ar';
 
+  // Shared announcement text for 2025 (used in multiple sections)
+  const announcementText = isRtl
+    ? `يسرُّنا الإعلان عن النجاح الباهر للملتقى العربي للحوكمة والتنمية المستدامة في نسخته الثانية، المنعقد برعاية جامعة الدول العربية وبشراكة مركز IGCC.
+شهد اليوم الأول حضور معالي السفيرة ندى العجيزي، ومعالي الدكتور أشرف صبحي، ومعالي الدكتورة ياسمين فؤاد.
+كما حضر سيادة العميد وسام صبري، وعدد من السادة أعضاء مجلسي النواب والشيوخ، ونخبة من الخبراء وقادة الأعمال.
+تمت إدارة الجلسات باحترافية عالية من الدكتورة نهى بدر، مع توفير ترجمة معتمدة للغة الإشارة من الدكتور كرم العجماوي.
+وحظي الملتقى بتغطية إعلامية موسّعة من قناة النيل للأخبار وشبكة أخبار مصر وقناة الحدث اليوم.`
+    : `We are pleased to announce the outstanding success of the Second Arab Governance and Sustainable Development Summit, held under the patronage of the Arab League in partnership with IGCC.
+Day one welcomed H.E. Amb. Neda El‑Agizy, H.E. Dr. Ashraf Sobhy, and H.E. Dr. Yasmine Fouad.
+Attendance also included Brig. Gen. Wissam Sabry, members of Parliament and the Senate, leading experts, and business leaders.
+Sessions were conducted with high professionalism by Dr. Noha Badr, with certified sign‑language interpretation by Dr. Karam El‑Ajmawy.
+The summit received extensive media coverage by Nile News, Egypt News Network, and Al Hadath Alyoum.`;
+
+  // Concise preview used beside the form
+  const shortAnnouncement = isRtl
+    ? 'النسخة الثانية 2025 تُعقد برعاية جامعة الدول العربية وبشراكة IGCC، بحضور قيادات حكومية وخبراء وقادة أعمال، مع جلسات مُدارة باحتراف وتغطية إعلامية واسعة.'
+    : 'The 2025 Second Edition is held under the Arab League’s patronage with IGCC, featuring high‑level attendance, professionally moderated sessions, and broad media coverage.';
+
   // Config state
   const [config, setConfig] = useState<ConfigData>({ 
     vimeoLink: '', 
     doctorImage: '', 
-    summitImage: 'summit.jpg' 
+    summitImage: '/images/sum25/1.jpg' 
   });
 
   // State to control previous summit details visibility
   const [showPreviousSummitDetails, setShowPreviousSummitDetails] = useState(false);
+  const [showPreviousSummitDetailsMay2025, setShowPreviousSummitDetailsMay2025] = useState(false);
 
   useEffect(() => {
     // Fetch config data
@@ -165,11 +184,19 @@ const SummitPage: NextPageWithLayout = () => {
               </Typography>
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
                 <Typography variant="body1">
-                  <strong>{t('summit.date')}</strong>
+                  <strong>
+                    {isRtl 
+                      ? '22 نوفمبر 2025 — من 11 صباحًا إلى 6 مساءً'
+                      : '22 November 2025 — 11:00 AM to 6:00 PM'}
+                  </strong>
                 </Typography>
                 <Typography variant="body1">|</Typography>
                 <Typography variant="body1">
-                  <strong>{t('summit.location')}</strong>
+                  <strong>
+                    {isRtl 
+                      ? 'فندق شيراتون المنتزه - الإسكندرية'
+                      : 'Sheraton Montazah Hotel - Alexandria'}
+                  </strong>
                 </Typography>
               </Box>
             </Box>
@@ -225,6 +252,20 @@ const SummitPage: NextPageWithLayout = () => {
           </Grid>
         </Box>
 
+        {/* 2025 Overview Section */}
+        <Box sx={{ mb: 6 }}>
+          <Paper sx={{ p: 4, borderRadius: 2, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}>
+            <Typography variant="h4" component="h2" gutterBottom sx={{ mb: 2, textAlign: 'center' }}>
+              {isRtl ? 'نبذة عن النسخة الثانية 2025' : 'Overview of the Second Edition 2025'}
+            </Typography>
+            {announcementText.split('\n\n').map((p, i) => (
+              <Typography key={i} variant="body1" paragraph sx={{ textAlign: isRtl ? 'right' : 'left', direction: isRtl ? 'rtl' : 'ltr' }}>
+                {p}
+              </Typography>
+            ))}
+          </Paper>
+        </Box>
+
         {/* Previous Summit Section with Toggle Button */}
         <Box sx={{ mb: 8, textAlign: 'center' }}>
           <Typography variant="h4" component="h2" gutterBottom sx={{ mb: 2, textAlign: 'center' }}>
@@ -268,7 +309,7 @@ const SummitPage: NextPageWithLayout = () => {
               <Grid item xs={12} md={6}>
                 <Box 
                   component="img"
-                  src="summit.jpg"
+                  src="/summit.jpg"
                   alt={isRtl ? 'صورة من الملتقى السابق' : 'Image from previous summit'}
                   sx={{ 
                     width: '100%', 
@@ -354,10 +395,10 @@ const SummitPage: NextPageWithLayout = () => {
               
               <Grid container spacing={2}>
                 {[
-                  'summit.jpg',
-                  'summit2.jpg',
-                  'summit3.jpg',
-                  'summit4.jpg'
+                  '/summit.jpg',
+                  '/summit2.jpg',
+                  '/summit3.jpg',
+                  '/summit4.jpg'
                 ].map((image, index) => (
                   <Grid item xs={6} md={3} key={index}>
                     <Box
@@ -493,6 +534,95 @@ const SummitPage: NextPageWithLayout = () => {
           )}
         </Box>
 
+        {/* Previous Summit Section (May 2025) with Toggle Button */}
+        <Box sx={{ mb: 8, textAlign: 'center' }}>
+          <Typography variant="h4" component="h2" gutterBottom sx={{ mb: 2, textAlign: 'center' }}>
+            {isRtl ? 'الملتقى السابق (مايو 2025)' : 'Previous Summit (May 2025)'}
+          </Typography>
+          
+          <Paper sx={{ p: 4, borderRadius: 2, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', mb: 4 }}>
+            <Grid container spacing={4}>
+              <Grid item xs={12} md={6}>
+                <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <Typography variant="h5" gutterBottom sx={{ textAlign: isRtl ? 'right' : 'left' }}>
+                    {isRtl ? 'الملتقى العربي للحوكمة والتنمية المستدامة (مايو 2025)' : 'Arab Governance and Sustainable Development Summit (May 2025)'}
+                  </Typography>
+                  <Typography variant="body1" paragraph sx={{ textAlign: isRtl ? 'right' : 'left', direction: isRtl ? 'rtl' : 'ltr' }}>
+                    {isRtl
+                      ? 'عُقدت نسخة مايو 2025 خلال الفترة من 18 إلى 20 مايو 2025 بمشاركة واسعة من الخبراء والمتخصصين.'
+                      : 'The May 2025 edition was convened from 18 to 20 May 2025 with broad participation from experts and specialists.'}
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 2, mt: 2, justifyContent: isRtl ? 'flex-end' : 'flex-start' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                      {isRtl ? 'التاريخ: 20–18 مايو 2025' : 'Date: 18–20 May 2025'}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                      {isRtl ? 'المكان: القاهرة، مصر' : 'Location: Cairo, Egypt'}
+                    </Typography>
+                  </Box>
+                  
+                  <Button 
+                    variant="contained" 
+                    color="primary" 
+                    sx={{ mt: 3, alignSelf: isRtl ? 'flex-end' : 'flex-start' }}
+                    onClick={() => setShowPreviousSummitDetailsMay2025(!showPreviousSummitDetailsMay2025)}
+                  >
+                    {isRtl 
+                      ? showPreviousSummitDetailsMay2025 ? 'إخفاء التفاصيل' : 'تفاصيل الملتقى السابق' 
+                      : showPreviousSummitDetailsMay2025 ? 'Hide Details' : 'Previous Summit Details'}
+                  </Button>
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Box 
+                  component="img"
+                  src="/images/sum25/1.jpg"
+                  alt={isRtl ? 'صورة من ملتقى مايو 2025' : 'Image from May 2025 summit'}
+                  sx={{ 
+                    width: '100%', 
+                    height: 300, 
+                    objectFit: 'cover', 
+                    borderRadius: 2,
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Paper>
+
+          {/* Collapsible Previous Summit Details (May 2025) */}
+          {showPreviousSummitDetailsMay2025 && (
+            <Box sx={{ mt: 4, animation: 'fadeIn 0.5s ease-in-out' }}>
+              <Typography variant="h5" gutterBottom sx={{ mb: 3, textAlign: isRtl ? 'right' : 'left' }}>
+                {isRtl ? 'معرض الصور' : 'Photo Gallery'}
+              </Typography>
+              <Grid container spacing={2}>
+                {['/images/sum25/1.jpg','/images/sum25/s2.jpg','/images/sum25/s3.jpg','/images/sum25/s4.jpg'].map((image, index) => (
+                  <Grid item xs={6} md={3} key={index}>
+                    <Box
+                      component="img"
+                      src={image}
+                      alt={`May 2025 photo ${index + 1}`}
+                      sx={{ 
+                        width: '100%', 
+                        height: 180, 
+                        objectFit: 'cover', 
+                        borderRadius: 2,
+                        transition: 'transform 0.3s ease',
+                        cursor: 'pointer',
+                        '&:hover': {
+                          transform: 'scale(1.03)',
+                          boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)'
+                        }
+                      }}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          )}
+        </Box>
+
         <Grid container spacing={6} sx={{ mb: 8 }}>
           <Grid item xs={12} md={6}>
             <IntroCard>
@@ -512,52 +642,17 @@ const SummitPage: NextPageWithLayout = () => {
                   paragraph 
                   sx={{ 
                     textAlign: isRtl ? 'right' : 'left',
-                    direction: isRtl ? 'rtl' : 'ltr'
+                    direction: isRtl ? 'rtl' : 'ltr',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 5,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden'
                   }}
                 >
-                  {(() => {
-                    const fullText = t('summit.introduction');
-                    
-                    // تطبيق التنسيق المختلف حسب اللغة
-                    if (isRtl) {
-                      // النص العربي المراد تلوينه
-                      const highlightText = 'يسرنا الإعلان عن انعقاد الجزء الثاني من الملتقى تحت رعاية جامعة الدول العربية والمركز الدولي لاستشارات الحوكمة وإدارة المشروعات (IGCC)، بمشاركة نخبة من الخبراء وقادة الفكر في مجالات الحوكمة والتنمية المستدامة';
-                      
-                      if (fullText.includes(highlightText)) {
-                        const parts = fullText.split(highlightText);
-                        
-                        return (
-                          <>
-                            {parts[0]}
-                            <span style={{ color: '#1976d2', fontWeight: 'bold' }}>
-                              {highlightText}
-                            </span>
-                            {parts[1]}
-                          </>
-                        );
-                      }
-                    } else {
-                      // النص الإنجليزي المراد تلوينه
-                      const highlightTextEn = 'We are pleased to announce the convening of the forum\'s second edition under the patronage of the Arab League and the International Governance and Project Management Consultancy Center (IGCC), with participation from a select group of experts and thought leaders in governance and sustainable development';
-                      
-                      if (fullText.includes(highlightTextEn)) {
-                        const parts = fullText.split(highlightTextEn);
-                        
-                        return (
-                          <>
-                            {parts[0]}
-                            <span style={{ color: '#1976d2', fontWeight: 'bold' }}>
-                              {highlightTextEn}
-                            </span>
-                            {parts[1]}
-                          </>
-                        );
-                      }
-                    }
-                    
-                    // إذا لم يتم العثور على النص، عرض النص كاملاً بدون تنسيق خاص
-                    return fullText;
-                  })()}
+                  {shortAnnouncement}
+                </Typography>
+                <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1, textAlign: isRtl ? 'right' : 'left' }}>
+                  {isRtl ? 'هذه هي النسخة الثانية لعام 2025' : 'This is the Second Edition (2025)'}
                 </Typography>
               </CardContent>
             </IntroCard>
@@ -567,6 +662,9 @@ const SummitPage: NextPageWithLayout = () => {
             <FormContainer>
               <Typography variant="h5" component="h2" gutterBottom sx={{ textAlign: isRtl ? 'right' : 'left' }}>
                 {t('summit.registerTitle')}
+              </Typography>
+              <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 3, textAlign: isRtl ? 'right' : 'left' }}>
+                {isRtl ? 'التسجيل للنسخة الثانية – 2025' : 'Registration for the Second Edition – 2025'}
               </Typography>
 
               {success && (
